@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Database, ArrowLeft, Table2, ChevronRight, AlertTriangle,
-  CheckCircle2, ScanLine, GitBranch, Users, ExternalLink,
+  CheckCircle2, ScanLine, GitBranch, Users, ExternalLink, Download,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { API_BASE_URL } from '../lib/constants';
@@ -22,6 +22,45 @@ const TABS = [
   { key: 'versions',   label: 'Schema Versions' },
   { key: 'drift', label: 'Drift Inbox' },
 ];
+
+function computeSnapshotDiff(prevSnapshot, currSnapshot) {
+  const prev = prevSnapshot || {};
+  const curr = currSnapshot || {};
+  const allTables = new Set([...Object.keys(prev), ...Object.keys(curr)]);
+  const byTable = [];
+  let totalAdded = 0, totalRemoved = 0, totalTypeChanged = 0;
+
+  for (const table of allTables) {
+    const prevCols = prev[table] || [];
+    const currCols = curr[table] || [];
+    const prevMap = Object.fromEntries(prevCols.map(c => [c.name, c.type]));
+    const currMap = Object.fromEntries(currCols.map(c => [c.name, c.type]));
+    const added = currCols.filter(c => !prevMap[c.name]);
+    const removed = prevCols.filter(c => !currMap[c.name]);
+    const typeChanged = currCols
+      .filter(c => prevMap[c.name] && prevMap[c.name] !== c.type)
+      .map(c => ({ column: c.name, from: prevMap[c.name], to: c.type }));
+
+    if (added.length || removed.length || typeChanged.length) {
+      byTable.push({ table, added, removed, typeChanged });
+      totalAdded += added.length;
+      totalRemoved += removed.length;
+      totalTypeChanged += typeChanged.length;
+    }
+  }
+
+  return { byTable, totalAdded, totalRemoved, totalTypeChanged };
+}
+
+function downloadVersionJson(version) {
+  const blob = new Blob([JSON.stringify(version, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${version.version_label}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const driftBadgeClass = (type) => {
   if (type === 'BREAKING_DRIFT') return 'bg-rose-50 text-rose-700';
@@ -48,6 +87,7 @@ export default function DataAssetDBPage() {
 
   const [reviewState, setReviewState] = useState({});
   const [acting, setActing] = useState(null);
+  const [expandedDiffTables, setExpandedDiffTables] = useState({});
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState(null);
 
@@ -406,20 +446,105 @@ export default function DataAssetDBPage() {
                   {repSandbox.project_id} / {repSandbox.target_environment} — Version History
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-1">
-                {workspaceVersions.map((v, idx) => (
-                  <div key={v.metadata_version_id} className="flex items-center gap-1">
-                    <div className={`rounded-xl border px-4 py-3 ${v.status === 'ACTIVE' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[13px] font-bold ${v.status === 'ACTIVE' ? 'text-emerald-700' : 'text-slate-500'}`}>{v.version_label}</span>
-                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${v.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{v.status}</span>
+              <div className="space-y-3">
+                {workspaceVersions.map((v) => {
+                  const prevVersion = v.predecessor_metadata_version_id
+                    ? workspaceVersions.find(w => w.metadata_version_id === v.predecessor_metadata_version_id)
+                    : null;
+                  const diff = prevVersion
+                    ? computeSnapshotDiff(prevVersion.metadata_snapshot, v.metadata_snapshot)
+                    : null;
+
+                  return (
+                    <div key={v.metadata_version_id} className={`rounded-xl border p-4 ${v.status === 'ACTIVE' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
+                      {/* Header */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[13px] font-bold ${v.status === 'ACTIVE' ? 'text-emerald-700' : 'text-slate-700'}`}>{v.version_label}</span>
+                          <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${v.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{v.status}</span>
+                          {prevVersion && (
+                            <span className="text-[11px] text-slate-400">← {prevVersion.version_label}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[11px] text-slate-400">{v.table_count}t · {v.column_count}c · {v.created_at ? new Date(v.created_at).toLocaleDateString() : '—'}</span>
+                          <button
+                            onClick={() => downloadVersionJson(v)}
+                            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-600 hover:bg-slate-50 transition-colors"
+                            title={`Download ${v.version_label} JSON`}
+                          >
+                            <Download size={11} />
+                            JSON
+                          </button>
+                        </div>
                       </div>
-                      <p className="mt-1 max-w-[200px] truncate text-[11px] text-slate-500" title={v.change_summary}>{v.change_summary || '—'}</p>
-                      <p className="mt-0.5 text-[10px] text-slate-400">{v.table_count}t · {v.column_count}c · {v.created_at ? new Date(v.created_at).toLocaleDateString() : '—'}</p>
+
+                      {/* Change summary */}
+                      {v.change_summary && (
+                        <p className="mt-2 text-[12px] text-slate-500">{v.change_summary}</p>
+                      )}
+
+                      {/* Drift diff — grouped by table */}
+                      {diff ? (
+                        diff.byTable.length === 0 ? (
+                          <p className="mt-3 text-[11px] text-emerald-600 italic">No schema changes from {prevVersion.version_label}.</p>
+                        ) : (
+                          <div className="mt-3 space-y-1">
+                            {/* Summary bar */}
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-[11px] text-slate-500">{diff.byTable.length} table{diff.byTable.length !== 1 ? 's' : ''} changed</span>
+                              {diff.totalAdded > 0 && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">+{diff.totalAdded} added</span>}
+                              {diff.totalRemoved > 0 && <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-medium text-rose-700">−{diff.totalRemoved} removed</span>}
+                              {diff.totalTypeChanged > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">{diff.totalTypeChanged} type changed</span>}
+                            </div>
+                            {/* Per-table rows */}
+                            {diff.byTable.map(({ table, added, removed, typeChanged }) => {
+                              const key = `${v.metadata_version_id}::${table}`;
+                              const expanded = expandedDiffTables[key];
+                              return (
+                                <div key={table} className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+                                  <button
+                                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-100 transition-colors"
+                                    onClick={() => setExpandedDiffTables(s => ({ ...s, [key]: !s[key] }))}
+                                  >
+                                    <span className="font-mono text-[12px] font-medium text-slate-700">{table}</span>
+                                    <div className="flex items-center gap-2">
+                                      {added.length > 0 && <span className="text-[10px] text-emerald-600">+{added.length}</span>}
+                                      {removed.length > 0 && <span className="text-[10px] text-rose-600">−{removed.length}</span>}
+                                      {typeChanged.length > 0 && <span className="text-[10px] text-amber-600">~{typeChanged.length}</span>}
+                                      <ChevronRight size={12} className={`text-slate-400 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+                                    </div>
+                                  </button>
+                                  {expanded && (
+                                    <div className="grid grid-cols-3 gap-2 px-3 pb-3">
+                                      <div>
+                                        <p className="text-[10px] font-semibold text-emerald-700 mb-1">Added</p>
+                                        {added.length === 0 ? <p className="text-[10px] text-slate-400">—</p>
+                                          : added.map(c => <p key={c.name} className="text-[11px] font-mono text-slate-700">{c.name} <span className="text-slate-400">({c.type})</span></p>)}
+                                      </div>
+                                      <div>
+                                        <p className="text-[10px] font-semibold text-rose-700 mb-1">Removed</p>
+                                        {removed.length === 0 ? <p className="text-[10px] text-slate-400">—</p>
+                                          : removed.map(c => <p key={c.name} className="text-[11px] font-mono text-slate-700">{c.name} <span className="text-slate-400">({c.type})</span></p>)}
+                                      </div>
+                                      <div>
+                                        <p className="text-[10px] font-semibold text-amber-700 mb-1">Type Changed</p>
+                                        {typeChanged.length === 0 ? <p className="text-[10px] text-slate-400">—</p>
+                                          : typeChanged.map(c => <p key={c.column} className="text-[11px] font-mono text-slate-700">{c.column}: <span className="text-rose-500">{c.from}</span>→<span className="text-emerald-600">{c.to}</span></p>)}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )
+                      ) : (
+                        <p className="mt-3 text-[11px] text-slate-400 italic">Initial snapshot — no previous version to diff against.</p>
+                      )}
                     </div>
-                    {idx < workspaceVersions.length - 1 && <ChevronRight className="h-4 w-4 flex-shrink-0 text-slate-300" />}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}

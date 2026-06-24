@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
   Database, Settings, Play, CheckCircle2, Clock,
   AlertTriangle, Eye, FileText, Activity, Lock,
-  ChevronRight, Shield, ChevronDown, Tags, SlidersHorizontal, TableProperties,
+  ChevronRight, Shield, ChevronDown, Tags, SlidersHorizontal, TableProperties, Plus, Target,
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -11,7 +11,7 @@ import { MetricCard } from '../components/ui/MetricCard';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useAuth } from '../context/AuthContext';
 import { useConnectors } from '../context/ConnectorsContext';
-import { API_BASE_URL, sampleColumns, connectorTableData } from '../lib/constants';
+import { API_BASE_URL, sampleColumns, connectorTableData, TEST_CONNECTOR_STRINGS } from '../lib/constants';
 
 const workflowSteps = [
   { id: 1, label: 'Source Selection', icon: Database },
@@ -51,27 +51,64 @@ function Stepper({ activeStep }) {
 }
 
 function SourceStep({ onNext, onMultipleDatasetsGenerated }) {
-  const { connectors } = useConnectors();
-  const [selectedConnectorName, setSelectedConnectorName] = useState('');
+  const { connectors, addConnector } = useConnectors();
+
+  // source database
+  const [sourceConnName, setSourceConnName] = useState('');
   const [selectedTables, setSelectedTables] = useState([]);
   const [rowCountByTable, setRowCountByTable] = useState({});
 
-  const selectedConnector = connectors.find((c) => c.name === selectedConnectorName);
-  const availableTables = selectedConnector ? (connectorTableData[selectedConnector.connectionString] || []) : [];
+  // target database
+  const [targetConnName, setTargetConnName] = useState('');
 
-  const handleConnectorChange = (name) => {
-    setSelectedConnectorName(name);
+  // inline add-connection panel
+  const [showAddConn, setShowAddConn] = useState(false);
+  const [newConnName, setNewConnName] = useState('');
+  const [newConnType, setNewConnType] = useState('SQL Server');
+  const [newConnString, setNewConnString] = useState('');
+  const [addConnMsg, setAddConnMsg] = useState(null);
+
+  // databases = connectors that have table data (Connected + has data)
+  const sourceDatabases = connectors.filter((c) => connectorTableData[c.connection]);
+  const targetDatabases = connectors.filter((c) => c.status === 'Connected');
+
+  const sourceConn = connectors.find((c) => c.name === sourceConnName);
+  const availableTables = sourceConn ? (connectorTableData[sourceConn.connection]?.tables || []) : [];
+  const dbLabel = sourceConn ? (connectorTableData[sourceConn.connection]?.database || sourceConn.connection) : '';
+
+  const handleSourceChange = (name) => {
+    setSourceConnName(name);
     setSelectedTables([]);
     setRowCountByTable({});
   };
 
   const toggleTable = (tableName) => {
     setSelectedTables((prev) =>
-      prev.includes(tableName)
-        ? prev.filter((t) => t !== tableName)
-        : [...prev, tableName]
+      prev.includes(tableName) ? prev.filter((t) => t !== tableName) : [...prev, tableName]
     );
     setRowCountByTable((prev) => ({ ...prev, [tableName]: prev[tableName] || 100 }));
+  };
+
+  const handleAddConnection = () => {
+    if (!newConnName.trim() || !newConnString.trim()) return;
+    const isTest = TEST_CONNECTOR_STRINGS.includes(newConnString.trim());
+    const conn = {
+      name: newConnName.trim(),
+      type: newConnType,
+      sourceType: newConnType === 'SFTP' ? 'File' : 'DB',
+      connection: newConnString.trim(),
+      status: isTest ? 'Connected' : 'Draft',
+      purpose: isTest
+        ? `Test connector — ${connectorTableData[newConnString.trim()]?.database} database`
+        : 'New connection created from pipeline setup',
+    };
+    addConnector(conn);
+    setAddConnMsg(
+      isTest
+        ? `✓ "${conn.name}" connected — ${connectorTableData[newConnString.trim()]?.tables?.length || 0} tables available. Select it above.`
+        : `"${conn.name}" added as Draft. Use a test connection string to get table data.`
+    );
+    setNewConnName(''); setNewConnString('');
   };
 
   const handleProceed = () => {
@@ -87,10 +124,12 @@ function SourceStep({ onNext, onMultipleDatasetsGenerated }) {
         override_allowed: true,
       }));
       return {
-        dataset_id: `${selectedConnectorName}-${tableName}`,
+        dataset_id: `${sourceConnName}-${tableName}`,
         filename: tableName,
         table_name: tableName,
-        source_type: 'connector',
+        source_type: 'database',
+        source_database: dbLabel,
+        target_connection: targetConnName,
         row_count: rowCountByTable[tableName] || 100,
         columns,
       };
@@ -99,82 +138,168 @@ function SourceStep({ onNext, onMultipleDatasetsGenerated }) {
     onNext();
   };
 
-  const canProceed = !!selectedConnectorName && selectedTables.length > 0;
+  const canProceed = !!sourceConnName && selectedTables.length > 0 && !!targetConnName;
 
   return (
     <div className="space-y-5">
+
+      {/* ── Source Database ── */}
       <Card className="rounded-2xl shadow-sm">
         <CardContent className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-slate-100 p-3"><Database className="h-6 w-6 text-slate-700" /></div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">Select Source Connector</h2>
-              <p className="text-[13px] text-slate-500">Pick a connector, then choose the tables you want to anonymize.</p>
+          <div className="flex items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-slate-100 p-3"><Database className="h-5 w-5 text-slate-700" /></div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Source Database</h2>
+                <p className="text-[13px] text-slate-500">Select the database to pull tables from.</p>
+              </div>
             </div>
-          </div>
-
-          <div className="mt-6">
-            <label className="text-[13px] font-medium text-slate-700">Connector</label>
-            <select
-              value={selectedConnectorName}
-              onChange={(e) => handleConnectorChange(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13px] outline-none"
+            <button
+              onClick={() => { setShowAddConn((v) => !v); setAddConnMsg(null); }}
+              className="flex items-center gap-1.5 rounded-xl border border-dashed border-indigo-300 bg-indigo-50 px-3 py-1.5 text-[12px] font-medium text-indigo-600 hover:bg-indigo-100 transition-colors"
             >
-              <option value="">Select a connector...</option>
-              {connectors.map((c) => (
-                <option key={c.name} value={c.name}>{c.name} — {c.type}</option>
-              ))}
-            </select>
+              <Plus size={13} /> New Connection
+            </button>
           </div>
 
-          {selectedConnector && availableTables.length === 0 && (
-            <p className="mt-4 text-[13px] text-slate-500">No tables found for this connector.</p>
+          {/* Inline add-connection form */}
+          {showAddConn && (
+            <div className="mb-5 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 space-y-3">
+              <p className="text-[12px] font-semibold text-indigo-700">Add a new connection</p>
+              <p className="text-[11px] text-slate-500">Use a test string to auto-verify: <span className="font-mono">test-retail.tdm.local:1433/RetailDB</span>, <span className="font-mono">test-finance.tdm.local:1521/FinanceDB</span>, or <span className="font-mono">test-hr-catalog.tdm.local/hr_schema</span></p>
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">Name</label>
+                  <input value={newConnName} onChange={(e) => setNewConnName(e.target.value)} placeholder="e.g. TEST_RETAIL_DB" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">Type</label>
+                  <select value={newConnType} onChange={(e) => setNewConnType(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none">
+                    <option>SQL Server</option><option>Oracle</option><option>Databricks</option><option>SFTP</option><option>Salesforce</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">Connection String</label>
+                  <input value={newConnString} onChange={(e) => setNewConnString(e.target.value)} placeholder="host:port/database" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+                </div>
+              </div>
+              <Button onClick={handleAddConnection} disabled={!newConnName.trim() || !newConnString.trim()} className="rounded-xl text-[13px]">
+                Add &amp; Connect
+              </Button>
+              {addConnMsg && (
+                <p className={`text-[12px] ${addConnMsg.startsWith('✓') ? 'text-emerald-600' : 'text-amber-600'}`}>{addConnMsg}</p>
+              )}
+            </div>
           )}
 
-          {availableTables.length > 0 && (
-            <div className="mt-6">
-              <p className="text-[13px] font-medium text-slate-700">Available Tables</p>
-              <div className="mt-3 space-y-2">
-                {availableTables.map((table) => {
-                  const isSelected = selectedTables.includes(table.name);
-                  return (
-                    <div
-                      key={table.name}
-                      className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition ${
-                        isSelected ? 'border-slate-900 bg-slate-50' : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleTable(table.name)}
-                        className="h-4 w-4"
-                      />
-                      <div className="flex-1">
-                        <p className="text-[13px] font-medium text-slate-900">{table.name}</p>
-                        <p className="text-[11px] text-slate-500">{table.rows?.length || 0} sample rows · {Object.keys(table.rows?.[0] || {}).length} columns</p>
-                      </div>
-                      {isSelected && (
-                        <div className="flex items-center gap-2">
-                          <label className="text-[11px] text-slate-500">Rows</label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="10000"
-                            value={rowCountByTable[table.name] || 100}
-                            onChange={(e) => setRowCountByTable((prev) => ({ ...prev, [table.name]: Number(e.target.value) }))}
-                            className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] outline-none"
-                          />
-                        </div>
-                      )}
+          {sourceDatabases.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+              <p className="text-[13px] text-slate-500">No databases available. Add a new connection above to get started.</p>
+            </div>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {sourceDatabases.map((c) => {
+                const data = connectorTableData[c.connection];
+                const isSelected = sourceConnName === c.name;
+                return (
+                  <button
+                    key={c.name}
+                    onClick={() => handleSourceChange(c.name)}
+                    className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                  >
+                    <Database size={16} className={`mt-0.5 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <div className="min-w-0">
+                      <p className={`text-[13px] font-semibold truncate ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>{data?.database || c.name}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{c.name} · {c.type}</p>
+                      <p className="text-[11px] text-slate-400">{data?.tables?.length || 0} tables</p>
                     </div>
-                  );
-                })}
-              </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* ── Tables ── */}
+      {sourceConn && (
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="rounded-2xl bg-slate-100 p-3"><TableProperties className="h-5 w-5 text-slate-700" /></div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Select Tables</h2>
+                <p className="text-[13px] text-slate-500">{dbLabel} — {availableTables.length} tables available</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {availableTables.map((table) => {
+                const isSelected = selectedTables.includes(table.name);
+                return (
+                  <div
+                    key={table.name}
+                    className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition ${isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white'}`}
+                  >
+                    <input type="checkbox" checked={isSelected} onChange={() => toggleTable(table.name)} className="h-4 w-4 accent-indigo-600" />
+                    <div className="flex-1">
+                      <p className="text-[13px] font-medium text-slate-900">{table.name}</p>
+                      <p className="text-[11px] text-slate-500">{table.rows?.length || 0} sample rows · {Object.keys(table.rows?.[0] || {}).length} columns</p>
+                    </div>
+                    {isSelected && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-[11px] text-slate-500">Rows</label>
+                        <input
+                          type="number" min="1" max="10000"
+                          value={rowCountByTable[table.name] || 100}
+                          onChange={(e) => setRowCountByTable((prev) => ({ ...prev, [table.name]: Number(e.target.value) }))}
+                          className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Target Database ── */}
+      {selectedTables.length > 0 && (
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="rounded-2xl bg-slate-100 p-3"><Target className="h-5 w-5 text-slate-700" /></div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Target Database</h2>
+                <p className="text-[13px] text-slate-500">Where masked data will be written to.</p>
+              </div>
+            </div>
+            {targetDatabases.length === 0 ? (
+              <p className="text-[13px] text-slate-400">No connected targets available. Add a connection above.</p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {targetDatabases.map((c) => {
+                  const isSelected = targetConnName === c.name;
+                  return (
+                    <button
+                      key={c.name}
+                      onClick={() => setTargetConnName(c.name)}
+                      className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                    >
+                      <Target size={16} className={`mt-0.5 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                      <div className="min-w-0">
+                        <p className={`text-[13px] font-semibold truncate ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>{c.name}</p>
+                        <p className="text-[11px] text-slate-500">{c.type} · {c.connection}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end">
         <Button onClick={handleProceed} disabled={!canProceed} className="rounded-xl">
