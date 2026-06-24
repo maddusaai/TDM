@@ -1,0 +1,134 @@
+{
+  "40e19730-860e-4e3c-ade5-3a73b7c9f98c": {
+    "review_id": "40e19730-860e-4e3c-ade5-3a73b7c9f98c",
+    "sandbox_id": "sandbox-003",
+    "project_id": "Finance-Reporting",
+    "target_environment": "DEV",
+    "last_approved_version_id": "mv-005",
+    "last_approved_version_label": "V2",
+    "drift_type": "BREAKING_DRIFT",
+    "diff": {
+      "added": [
+        "address",
+        "appointment_date",
+        "appointment_id",
+        "created_at",
+        "date_of_birth",
+        "department",
+        "diagnosis_code",
+        "doctor_id",
+        "first_name",
+        "insurance_id",
+        "last_name",
+        "phone_number",
+        "visit_reason"
+      ],
+      "removed": [
+        "appt_date",
+        "appt_id",
+        "dob",
+        "full_name"
+      ],
+      "type_changed": [
+        {
+          "column": "patient_id",
+          "from": "integer",
+          "to": "string"
+        }
+      ],
+      "added_detail": [
+        {
+          "column": "address",
+          "type": "string"
+        },
+        {
+          "column": "appointment_date",
+          "type": "date"
+        },
+        {
+          "column": "appointment_id",
+          "type": "string"
+        },
+        {
+          "column": "created_at",
+          "type": "datetime"
+        },
+        {
+          "column": "date_of_birth",
+          "type": "date"
+        },
+        {
+          "column": "department",
+          "type": "string"
+        },
+        {
+          "column": "diagnosis_code",
+          "type": "string"
+        },
+        {
+          "column": "doctor_id",
+          "type": "string"
+        },
+        {
+          "column": "first_name",
+          "type": "string"
+        },
+        {
+          "column": "insurance_id",
+          "type": "string"
+        },
+        {
+          "column": "last_name",
+          "type": "string"
+        },
+        {
+          "column": "phone_number",
+          "type": "string"
+        },
+        {
+          "column": "visit_reason",
+          "type": "string"
+        }
+      ]
+    },
+    "current_schema": {
+      "patient_id": "string",
+      "first_name": "string",
+      "last_name": "string",
+      "date_of_birth": "date",
+      "ssn": "string",
+      "email": "string",
+      "phone_number": "string",
+      "address": "string",
+      "diagnosis_code": "string",
+      "doctor_id": "string",
+      "insurance_id": "string",
+      "created_at": "datetime",
+      "appointment_id": "string",
+      "appointment_date": "date",
+      "department": "string",
+      "visit_reason": "string",
+      "status": "string"
+    },
+    "suggested_rules": {
+      "address": "Fake Value",
+      "appointment_date": "No Masking",
+      "appointment_id": "Hash",
+      "created_at": "No Masking",
+      "date_of_birth": "Date Shift",
+      "department": "No Masking",
+      "diagnosis_code": "No Masking",
+      "doctor_id": "Hash",
+      "first_name": "Fake Value",
+      "insurance_id": "Hash",
+      "last_name": "Fake Value",
+      "phone_number": "Fake Value",
+      "visit_reason": "No Masking"
+    },
+    "status": "APPROVED",
+    "detected_at": "2026-06-24T11:40:19.900412",
+    "resolved_at": "2026-06-24T11:41:04.376963",
+    "change_summary": "test",
+    "reason": null
+  }
+}

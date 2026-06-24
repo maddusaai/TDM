@@ -1,0 +1,40 @@
+# React / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Python / FastAPI
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/.env.local
+
+# Generated / uploaded runtime data
+backend/data/masked_output.csv
+backend/data/uploads/
+backend/data/outputs/
+backend/data/generated/
+backend/data/datasets_registry.json
+backend/data/sandboxes/
+backend/data/metadata_versions/
+
+# Local editor / tooling state
+.claude/
+
+# Cache files
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Mac / system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

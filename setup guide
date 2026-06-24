@@ -1,0 +1,153 @@
+# TDM Anonymization MVP - Setup Guide
+
+## Backend Setup
+
+### Navigate to Backend Directory
+
+```cmd
+cd .\backend\
+```
+
+### Create Virtual Environment
+
+```cmd
+py -m venv venv
+```
+
+### Activate Virtual Environment
+
+```cmd
+.\venv\Scripts\Activate.ps1
+```
+
+### Install Required Dependencies
+
+```cmd
+python -m pip install fastapi uvicorn pandas python-multipart faker
+```
+
+### Start Backend Server
+
+```cmd
+python -m uvicorn main:app --reload --port 8000
+```
+
+### Backend URL
+
+```
+http://127.0.0.1:8000
+```
+
+---
+
+## Frontend Setup
+
+### Navigate to Frontend Directory
+
+```cmd
+cd .\frontend\
+```
+
+### Install Dependencies
+
+```cmd
+npm install
+```
+
+### Install Additional Packages
+
+```cmd
+npm install axios lucide-react
+```
+
+### Start Frontend Application
+
+```cmd
+npm run dev
+```
+
+### Frontend URL
+
+```
+http://localhost:5173
+```
+
+---
+
+# Application Access
+
+## Admin Account
+
+**Email:** [admin@tdm.com](mailto:admin@tdm.com)
+
+**Password:** Admin@123
+
+### Access Level
+
+* Full administrative privileges
+* User management
+* System configuration
+* Data management and monitoring
+
+---
+
+## Developer Account
+
+**Email:** [developer@tdm.com](mailto:developer@tdm.com)
+
+**Password:** Dev@123
+
+### Access Level
+
+* Developer access
+* Testing and development activities
+* Feature validation
+
+---
+
+# Quick Start Checklist
+
+1. Start the backend server from the `backend` folder.
+2. Verify the backend is running at `http://127.0.0.1:8000`.
+3. Start the frontend application from the `frontend` folder.
+4. Open `http://localhost:5173` in your browser.
+5. Log in using either the Admin or Developer credentials provided above.
+
+---
+
+# Troubleshooting
+
+### Virtual Environment Activation Fails
+
+Ensure you are running the command from the backend directory:
+
+```cmd
+venv\Scripts\activate
+```
+
+### Python Package Installation Issues
+
+Upgrade pip and retry:
+
+```cmd
+python -m pip install --upgrade pip
+```
+
+### Frontend Dependency Issues
+
+Remove existing modules and reinstall:
+
+```cmd
+rmdir /s /q node_modules
+del package-lock.json
+npm install
+```
+
+### Port Already in Use
+
+Check whether another process is using:
+
+* Port 8000 (Backend)
+* Port 5173 (Frontend)
+
+Stop the conflicting process or use an alternate port.

@@ -1,0 +1,38 @@
+[
+  {
+    "table_contains": null,
+    "column": "patient_name",
+    "rule": "Partial Masking",
+    "locked_by": "TDM Admin",
+    "reason": "Lock",
+    "developer_can_override": false,
+    "enabled": true
+  },
+  {
+    "table_contains": null,
+    "column": "account_id",
+    "rule": "Partial Masking",
+    "locked_by": "TDM Admin",
+    "reason": "Sensitive data",
+    "developer_can_override": false,
+    "enabled": true
+  },
+  {
+    "table_contains": null,
+    "column": "ssn",
+    "rule": "Fake Value",
+    "locked_by": "TDM Admin",
+    "reason": "Sensitive Information",
+    "developer_can_override": false,
+    "enabled": true
+  },
+  {
+    "table_contains": null,
+    "column": "user_id",
+    "rule": "Partial Masking",
+    "locked_by": "TDM Admin",
+    "reason": "test",
+    "developer_can_override": true,
+    "enabled": true
+  }
+]
