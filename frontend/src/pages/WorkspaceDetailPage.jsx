@@ -847,23 +847,6 @@ export default function WorkspaceDetailPage() {
 
 
 
-      {/* Tab nav */}
-      <div className="flex gap-1 overflow-x-auto border-b border-slate-200 pb-0">
-        {TABS.map((t) => (
-          <button
-            key={t.tab}
-            onClick={() => navigate(`${basePath}/workspaces/${wsId}${t.tab ? `/${t.tab}` : ''}`)}
-            className={`whitespace-nowrap px-4 py-2 text-[13px] font-medium border-b-2 transition-colors ${
-              activeTab.tab === t.tab
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
       {/* Tab Content */}
       {activeTab.tab === '' && <OverviewTab workspace={workspace} />}
       {activeTab.tab === 'members' && <MembersTab workspace={workspace} />}

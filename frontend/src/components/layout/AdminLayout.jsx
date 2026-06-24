@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Shield, Upload, Network, Tag,
@@ -7,9 +8,9 @@ import {
   Play, List, Eye, Clock, CreditCard, Users, History
 } from 'lucide-react';
 
-import { blueprintWorkspaces, wsSlug, ENV_BADGE, WS_NAV } from '../../lib/constants';
+import { blueprintWorkspaces, wsSlug, ENV_BADGE, WS_NAV, API_BASE_URL } from '../../lib/constants';
 
-const WORKSPACES = blueprintWorkspaces.map((ws, i) => ({
+const BLUEPRINT_WORKSPACES = blueprintWorkspaces.map((ws, i) => ({
   id: `ws-${i}`,
   name: ws.name,
   environment: ws.environment,
@@ -18,13 +19,28 @@ const WORKSPACES = blueprintWorkspaces.map((ws, i) => ({
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [sandboxes, setSandboxes] = useState([]);
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/sandboxes`).then((r) => setSandboxes(r.data.sandboxes || [])).catch(() => {});
+  }, []);
+
   const wsMatch = location.pathname.match(/\/admin\/workspaces\/([^/]+)/);
   const activeWsSlug = wsMatch ? wsMatch[1] : null;
-  const activeWorkspace = WORKSPACES.find((w) => w.slug === activeWsSlug) || null;
+
+  const blueprintMatch = BLUEPRINT_WORKSPACES.find((w) => w.slug === activeWsSlug) || null;
+  const sandboxMatch   = !blueprintMatch && activeWsSlug
+    ? sandboxes.find((s) => s.sandbox_id === activeWsSlug)
+    : null;
+
+  const activeWorkspace = blueprintMatch || (sandboxMatch ? {
+    slug: sandboxMatch.sandbox_id,
+    name: `${sandboxMatch.project_id} — ${sandboxMatch.target_environment}`,
+    environment: sandboxMatch.target_environment,
+  } : null);
 
   useEffect(() => {
     setCollapsed(!!activeWorkspace);
