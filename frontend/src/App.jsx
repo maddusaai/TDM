@@ -4,6 +4,7 @@ import axios from 'axios';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ConnectorsProvider } from './context/ConnectorsContext';
 import { WorkspacesProvider } from './context/WorkspacesContext';
+import { JobsProvider } from './context/JobsContext';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import AdminLayout from './components/layout/AdminLayout';
 import DeveloperLayout from './components/layout/DeveloperLayout';
@@ -16,8 +17,7 @@ import MetadataVersionsPage from './pages/MetadataVersionsPage';
 import SourceConnectionsPage from './pages/SourceConnectionsPage';
 import DataClassificationPage from './pages/DataClassificationPage';
 import MaskingRulesPage from './pages/MaskingRulesPage';
-import CreatePipelinePage from './pages/CreatePipelinePage';
-import ExistingPipelinesPage from './pages/ExistingPipelinesPage';
+import PipelinesPage from './pages/ExistingPipelinesPage';
 import MaskedAssetsPage from './pages/MaskedAssetsPage';
 import JobHistoryPage from './pages/JobHistoryPage';
 import SandboxManagerPage from './pages/SandboxManagerPage';
@@ -90,8 +90,7 @@ function AppRoutes() {
           <Route path="data-assets/:connectionId" element={<DataAssetDBPage />} />
           <Route path="data-assets/:connectionId/table/:datasetId" element={<DataAssetTablePage />} />
           <Route path="masking-rules" element={<MaskingRulesPage />} />
-          <Route path="create-pipeline" element={<CreatePipelinePage />} />
-          <Route path="pipelines" element={<ExistingPipelinesPage />} />
+          <Route path="pipelines" element={<PipelinesPage />} />
           <Route path="masked-assets" element={<MaskedAssetsPage />} />
           <Route path="job-history" element={<JobHistoryPage />} />
           <Route path="sandbox-manager" element={<SandboxManagerPage />} />
@@ -101,7 +100,6 @@ function AppRoutes() {
           <Route path="workspaces/:wsId/data-inventory" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/data-classification" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/masking-rules" element={<WorkspaceDetailPage />} />
-          <Route path="workspaces/:wsId/create-pipeline" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/pipelines" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/masked-assets" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/jobs" element={<WorkspaceDetailPage />} />
@@ -141,7 +139,6 @@ function AppRoutes() {
           <Route path=":wsId/data-inventory" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/data-classification" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/masking-rules" element={<WorkspaceDetailPage />} />
-          <Route path=":wsId/create-pipeline" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/pipelines" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/masked-assets" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/jobs" element={<WorkspaceDetailPage />} />
@@ -163,7 +160,9 @@ export default function App() {
       <AuthProvider>
         <ConnectorsProvider>
           <WorkspacesProvider>
-            <AppRoutes />
+            <JobsProvider>
+              <AppRoutes />
+            </JobsProvider>
           </WorkspacesProvider>
         </ConnectorsProvider>
       </AuthProvider>

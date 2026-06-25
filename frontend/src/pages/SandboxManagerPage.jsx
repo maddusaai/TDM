@@ -6,13 +6,27 @@ import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
 import { PageHeader } from '../components/ui/PageHeader';
 import { API_BASE_URL } from '../lib/constants';
+import { useWorkspaces } from '../context/WorkspacesContext';
+import { useAuth } from '../context/AuthContext';
+
+const ENV_BY_ROLE = {
+  admin: ['DEV', 'QA', 'PROD'],
+  developer: ['DEV'],
+  qa: ['DEV', 'QA'],
+  viewer: [],
+};
 
 export default function SandboxManagerPage() {
+  const { workspaces } = useWorkspaces();
+  const { user } = useAuth();
+  const allowedEnvs = ENV_BY_ROLE[user?.role] ?? ['DEV'];
+
   const [sandboxes, setSandboxes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [owner, setOwner] = useState('person_A');
+  const [workspaceId, setWorkspaceId] = useState('');
+  const [owner, setOwner] = useState(() => user?.name || '');
   const [projectId, setProjectId] = useState('Project_001');
-  const [targetEnvironment, setTargetEnvironment] = useState('DEV');
+  const [targetEnvironment, setTargetEnvironment] = useState(allowedEnvs[0] ?? 'DEV');
   const [selectedTablesText, setSelectedTablesText] = useState('patient_records, appointments');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -41,6 +55,7 @@ export default function SandboxManagerPage() {
     setMessage('');
     setError('');
 
+    if (!workspaceId) { setError('Please select a workspace.'); return; }
     if (!owner.trim()) { setError('Please enter an owner.'); return; }
     if (!projectId.trim()) { setError('Please enter a project ID.'); return; }
 
@@ -49,6 +64,7 @@ export default function SandboxManagerPage() {
     try {
       setCreating(true);
       const response = await axios.post(`${API_BASE_URL}/sandboxes`, {
+        workspace_id: workspaceId,
         owner: owner.trim(),
         project_id: projectId.trim(),
         target_environment: targetEnvironment,
@@ -107,26 +123,30 @@ export default function SandboxManagerPage() {
             </span>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-4">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-slate-600">Workspace</label>
+              <select value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none">
+                <option value="">— Select Workspace —</option>
+                {workspaces.map((ws) => <option key={ws.id || ws.name} value={ws.id || ws.name}>{ws.name}</option>)}
+              </select>
+            </div>
             <div>
               <label className="mb-1 block text-[11px] font-medium text-slate-600">Owner</label>
-              <input value={owner} onChange={(e) => setOwner(e.target.value)} placeholder="person_A" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+              <input value={owner} onChange={(e) => setOwner(e.target.value)} placeholder={user?.name || 'Your name'} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-slate-600">Target Environment</label>
+              <select value={targetEnvironment} onChange={(e) => setTargetEnvironment(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none">
+                {allowedEnvs.map((env) => <option key={env} value={env}>{env}</option>)}
+              </select>
             </div>
             <div>
               <label className="mb-1 block text-[11px] font-medium text-slate-600">Project ID</label>
               <input value={projectId} onChange={(e) => setProjectId(e.target.value)} placeholder="Project_001" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
             </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-medium text-slate-600">Target Environment</label>
-              <select value={targetEnvironment} onChange={(e) => setTargetEnvironment(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none">
-                <option value="DEV">DEV</option>
-                <option value="QA">QA</option>
-                <option value="REGRESSION">REGRESSION</option>
-                <option value="UAT">UAT</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-medium text-slate-600">Tables</label>
+            <div className="lg:col-span-2">
+              <label className="mb-1 block text-[11px] font-medium text-slate-600">Tables (comma-separated)</label>
               <input value={selectedTablesText} onChange={(e) => setSelectedTablesText(e.target.value)} placeholder="patient_records, appointments" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
             </div>
           </div>

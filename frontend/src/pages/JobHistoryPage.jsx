@@ -5,9 +5,11 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
 import { API_BASE_URL } from '../lib/constants';
+import { useJobs } from '../context/JobsContext';
 
 export default function JobHistoryPage() {
-  const [jobs, setJobs] = useState([]);
+  const { jobs: contextJobs } = useJobs();
+  const [apiJobs, setApiJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -16,18 +18,24 @@ export default function JobHistoryPage() {
       setLoading(true);
       setError(null);
       const response = await axios.get(`${API_BASE_URL}/jobs/history`);
-      setJobs(response.data.jobs || []);
-      setLoading(false);
+      setApiJobs(response.data.jobs || []);
     } catch (err) {
       console.error(err);
-      setLoading(false);
       setError('Unable to load job history from backend.');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchHistory();
   }, []);
+
+  const contextJobIds = new Set(contextJobs.map((j) => j.job_id));
+  const jobs = [
+    ...contextJobs,
+    ...apiJobs.filter((j) => !contextJobIds.has(j.job_id)),
+  ];
 
   return (
     <div className="space-y-6">
@@ -67,21 +75,25 @@ export default function JobHistoryPage() {
                 <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="px-4 py-3 font-medium">Job ID</th>
+                    <th className="px-4 py-3 font-medium">Pipeline</th>
                     <th className="px-4 py-3 font-medium">Dataset</th>
-                    <th className="px-4 py-3 font-medium">Source Type</th>
+                    <th className="px-4 py-3 font-medium">Triggered By</th>
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 font-medium">Created At</th>
                     <th className="px-4 py-3 font-medium">Rows</th>
-                    <th className="px-4 py-3 font-medium">Columns Masked</th>
-                    <th className="px-4 py-3 font-medium">Execution Mode</th>
+                    <th className="px-4 py-3 font-medium">Cols Masked</th>
+                    <th className="px-4 py-3 font-medium">Mode</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {jobs.map((job) => (
                     <tr key={job.job_id} className="bg-white">
-                      <td className="px-4 py-3 font-mono text-[11px] text-slate-700">{job.job_id}</td>
+                      <td className="px-4 py-3 font-mono text-[11px] text-slate-700">{job.job_id?.slice(0, 8)}…</td>
+                      <td className="px-4 py-3 text-slate-700 text-[12px]">{job.pipeline_name || <span className="text-slate-400">—</span>}</td>
                       <td className="px-4 py-3 text-slate-700">{job.dataset_name || 'N/A'}</td>
-                      <td className="px-4 py-3 text-slate-700">{job.source_type || 'N/A'}</td>
+                      <td className="px-4 py-3 text-slate-600 text-[12px]">
+                        {job.triggered_by_name || job.triggered_by_email || <span className="text-slate-400">—</span>}
+                      </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700">
                           {job.status}
@@ -90,7 +102,7 @@ export default function JobHistoryPage() {
                       <td className="px-4 py-3 text-slate-600">{new Date(job.created_at).toLocaleString()}</td>
                       <td className="px-4 py-3 text-slate-900">{job.rows_processed?.toLocaleString()}</td>
                       <td className="px-4 py-3 text-slate-900">{job.columns_masked}</td>
-                      <td className="px-4 py-3 text-slate-600">{job.execution_mode}</td>
+                      <td className="px-4 py-3 text-slate-600 text-[12px]">{job.execution_mode}</td>
                     </tr>
                   ))}
                 </tbody>

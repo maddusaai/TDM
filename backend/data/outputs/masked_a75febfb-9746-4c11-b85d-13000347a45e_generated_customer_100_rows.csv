@@ -1,0 +1,101 @@
+customer_id,full_name,email,phone_number,date_of_birth,address,city,state,zip_code,account_balance
+e0ef62cf,Dawn Gonzalez,karencooper@example.com,Megan Richardson DDS,1994-09-16,William Cobb,Port Heatherside,AK,42607,9472.36
+684d0635,Sandra Fox,xcameron@example.com,Patrick Clark,1969-12-20,Timothy King,West Kathryn,RI,642,20057.34
+0bb497b9,Joshua Harris,alexis73@example.com,+1-673-406-9408,1977-04-11,Robert Kidd,Christinatown,OR,60720,30221.95
+4fee26fa,Bruce Klein,kevin46@example.org,Christopher Monroe,2005-10-23,Janet Barber,Amyburgh,DC,18309,49268.44
+0184a47b,Wendy Day,aprilvargas@example.org,Andrew Hart,1975-02-13,Selena Jordan,North Mary,PA,2612,43564.39
+e0fc679c,Christopher Mclean,brandy62@example.com,Brandon Wood,1968-03-19,David Sullivan,Richardsonmouth,AL,76999,23204.03
+dc2bc556,Thomas Bass,rodriguezandrea@example.net,Paul Burnett,1968-10-11,Breanna Pierce,Lake Joseview,GA,38303,33192.95
+7d6501c3,Jessica Franco,guzmankeith@example.com,Lynn Anderson,1968-08-25,Dawn Stewart,East Janiceside,NY,35878,45982.86
+8584702e,John Kramer,christinapeterson@example.org,Stephanie Watts,1965-06-27,Joan Becker,Jenniferville,OH,79682,21400.54
+db0b924d,Joel Avila,ohansen@example.com,(853)445-7072x35700,1949-08-26,Charles Andrews,Christopherland,FL,21000,5654.76
+2f9a6344,Aaron Bell,justinwilcox@example.com,Kevin Ward,1987-01-08,Jennifer Perry,South Dianafurt,AR,24915,16060.7
+5a4913f2,Catherine Boyd,charlesramos@example.org,Debra Velasquez,1983-12-06,Alexander Jones,Gloriaton,NE,18033,11922.36
+8c11c792,Jessica Sanders,coopercatherine@example.org,(947)331-2260x5025,1973-03-22,Tiffany Wells,Port Michael,WV,2080,24955.95
+d194387b,Penny Mcgee,fortiz@example.com,Trevor Stewart,1955-08-06,Jody Simon,West Jamieshire,MA,35726,49613.83
+a30336df,Amy Collins,kellerbrian@example.net,Roger Barry,1999-07-07,James Mcdaniel,South Lisastad,NC,66685,36823.04
+9bfd71ea,Juan Cook,ashleymccall@example.org,Rachel Winters,1979-08-19,Teresa Larsen,Timothyburgh,AR,61959,10235.37
+fd84217a,Benjamin Stevens,hernandezmichael@example.com,Mary Soto,1953-04-25,Allison Snyder,West Kennethfurt,NE,9954,44061.15
+ecc17c0a,Julia Stevens,reyesclaire@example.net,200-212-7452,1993-05-06,Brent Espinoza,Lake Samanthastad,DE,47854,35629.12
+361de01c,George Nelson,othompson@example.com,001-679-238-7499,1973-08-17,Alex Crawford,North Loganbury,KS,32879,16443.27
+7a1fd583,Nicholas Villa,burchbrittany@example.org,Isaiah Rivera,1954-09-14,Jake Aguilar,Smithton,OH,99805,48132.42
+204e2139,Robin Levine,anthonypeterson@example.org,James Harper,1982-06-11,Heather Hall,East Taylor,IA,56049,41316.57
+d162e227,Katie Butler,leachjermaine@example.com,(533)573-7604x2104,1982-11-01,Tammy Davis,Valeriehaven,IN,49294,15699.0
+f8eb9a1c,Danielle Shaw,rknight@example.net,Jacqueline Long,1977-12-14,Russell Rivera,East John,AL,29003,9663.47
+ae417207,Gina Galvan,warnerjennifer@example.org,Zachary Moore,2005-04-28,Charles Holland,Kellymouth,NM,37699,9156.96
+52c996e1,Sandra Jones,jenniferpatton@example.com,600.292.3999,1964-10-14,William Bradshaw,West Angel,FL,42997,40303.95
+598e38dd,Joseph Patel,ygray@example.net,(571)273-0608x00874,1997-04-22,Danielle Hill,Jasminehaven,WI,80230,12323.74
+292f0d4e,Kathryn Roach,kadkins@example.org,Kenneth Brown,1986-12-23,Alexander Luna,Lake Lisa,IN,8138,20511.38
+5b3fb9c5,Thomas Bishop,colson@example.org,865-817-5343x293,1972-05-23,Cynthia Newman,North Rebecca,SC,80662,5281.47
+deaa8b1f,John Hunter,joshuarodriguez@example.org,Katherine Hernandez,2002-04-03,Gerald Frey,East Deborah,ME,30799,2439.57
+829c4aaa,Brian Cooper,williecabrera@example.org,Kayla Alexander,1982-05-04,Michael Williams,Lake Melaniestad,NY,52660,22798.65
+a6b6b799,Daniel Fuentes,ronaldwest@example.com,Sharon Long,2003-05-17,Nicholas Martinez,Port Bradley,NE,52319,42484.74
+a2ec4763,Ryan Goodman,james62@example.org,Marie Salinas,1958-06-18,Patricia Williams,Traciview,ND,68061,39401.58
+f5a4ef64,Dorothy James,norma10@example.org,Lydia Bailey,1953-03-27,Robert Mitchell,Wilsonfurt,ME,43210,31090.11
+92205bb6,James Lewis,glandry@example.com,001-469-478-2872x9848,1975-01-16,John Roth,Blairville,RI,35343,20956.39
+49e8da4a,Michelle Harris,anthonyperez@example.net,Paul Reid,1995-03-26,Claudia Williams,Charlesshire,RI,13595,31605.98
+86aa73d7,Kent Wright,herreraconnie@example.com,Sheila Gilbert,1977-06-05,Andrew Pittman,Williamfurt,CA,73341,24625.97
+05de64ef,Brianna Mcclain,nbrown@example.com,Kristine Rodriguez,2003-10-16,Todd Black,Gonzalezberg,FL,5185,31014.49
+b8b87f4b,Russell Rodriguez,benjaminfoster@example.net,James Carr,1967-02-26,James Carey,East Sarah,CT,37037,21195.04
+13a245b0,Hector Alvarez,sullivanjoshua@example.org,Shannon Juarez,1975-02-24,Noah Moore,Randolphborough,WY,31459,29033.75
+a6baa9aa,Margaret West,qwilliams@example.com,Christopher Brady,2008-02-03,Robert Stein,North Mallorytown,OH,89192,30614.19
+8d730513,Miguel Montoya,dwatts@example.org,Tiffany Jacobson,1998-04-26,Colleen Perez,New Christineview,UT,89722,18787.25
+5f76b51e,Michele Valdez,oadams@example.com,Clayton Wright,1977-02-22,Stephanie Graham,Jennifershire,NH,62351,42145.82
+26ec318e,Sarah Atkinson,npearson@example.org,Todd Smith,1968-01-15,Patrick Rollins,East Michelle,MO,49157,42170.39
+71c84c71,Kimberly Sweeney,dariusnash@example.org,482.834.6522x6057,1991-11-10,Christopher Lewis,Port Sarah,ND,40812,21514.26
+6ea0cb90,Caitlin Woods,amber12@example.org,Eric Arnold,1948-12-21,Diana Farley,Bartlettfurt,MS,56636,36442.86
+0f6bb33b,Alexis Paul,jeffreycox@example.com,Anthony Taylor,1954-02-23,Mark Mccarthy,Cathyside,IL,28643,1865.66
+a9fbb40e,Mary Watts,wayers@example.net,+1-794-354-9855x21778,2000-08-19,Mitchell Curtis,Gilbertview,AL,98969,46975.17
+c8c234dc,Angela Wallace,karencallahan@example.net,Nicholas Warren,1976-02-09,Louis Clay,Devinport,MI,96841,45537.2
+3d380262,Judy Smith,gabriellajenkins@example.net,Vanessa Clayton,1966-07-08,Mary Smith,Kristentown,UT,53856,17119.22
+b3ca8fb2,Tammy Potts,ashleyfitzpatrick@example.org,Heather Walker,1956-07-27,James Hayden,Stephaniemouth,MT,16170,32627.59
+bc0f14a4,Joshua Cortez,rwright@example.net,Jennifer Gordon,1965-02-02,Justin Bryant,Joeshire,NC,72297,13484.4
+71fa317f,Mr. Thomas Johnson MD,obrienaaron@example.com,Anthony Salazar,1984-06-01,Lauren Watson,Solismouth,MH,79126,23639.19
+e8fa3ace,Michael Ortiz,xfischer@example.com,Angela Hawkins,1956-03-30,Zachary Donovan,Evanschester,WI,68300,29477.51
+097a6edc,Emily Jenkins,sheltonwilliam@example.net,Sophia Jones,2001-09-10,Robert Hamilton,Port Anthony,PR,94760,1436.67
+4d434d11,Jill Brown,johnny59@example.com,Carolyn Cole,1983-02-17,Jeffrey Brown,South Sherritown,TX,57413,15491.59
+d19f8ed0,Eric Hall,jose19@example.com,Ricky Rodriguez,1972-04-01,Teresa Morgan,North Ashley,OR,12470,29705.8
+46b1bf23,Jessica Rosales,carrillomaurice@example.com,841.865.5076x586,1987-11-21,Kaitlyn Holmes,New Madeline,NC,49600,39827.35
+036fde09,Kelsey Martin,handerson@example.org,001-963-358-9455x64072,1957-08-10,Stephen Evans,South Darrellside,VI,1127,16326.33
+b8e53aed,Carolyn Weaver,brian31@example.net,William Atkinson,1981-05-19,Jeff Dillon,Jessicashire,DC,58901,12487.15
+cec54a9c,Phillip King,corymorris@example.net,Cathy Green,1975-11-04,Tim Parks,Katherinefurt,KS,78467,24050.11
+dc6e61aa,Wendy Franco,perezjonathan@example.com,001-613-347-0689x96762,2001-11-12,Christina Taylor,Tonyburgh,UT,78004,2546.34
+0bac10be,David Adams,yerickson@example.org,Kayla Dyer,1996-12-20,Jennifer Hicks,South Tyler,OR,78859,3795.44
+10a6e8a7,Julie Olsen,adriana30@example.com,(272)861-2014x419,1950-11-10,Jim Carrillo,Reyesfort,MT,27725,23930.99
+e8ca2639,Karen Andrews,rebeccahoffman@example.net,001-924-917-1369,1961-09-10,Dylan Stone,Lopezberg,AS,85091,13268.82
+c9e5e008,Theresa Erickson,roy88@example.com,(582)961-6689,1960-12-23,Hayden Meyer,East James,NY,64462,21811.05
+471a157b,Craig Williams,tammy56@example.net,8116426983,1968-02-21,Tammy Anderson,Jordantown,DE,65860,46869.98
+3c9adc66,Steve Gibson,kingkevin@example.com,001-861-575-0968,2005-12-12,Eugene Taylor,New Louis,DE,46777,38803.14
+eb773a64,David Graves,peckana@example.com,+1-910-383-4693x1574,1956-11-15,Jeremy Gonzales,Millerburgh,WY,24376,2589.12
+5f507ce5,Sandra Black,heatherali@example.net,717.475.4780x2916,1971-02-16,Jerry Tucker,Tamarashire,IA,32420,35237.63
+e16fb091,Derek Medina,danielle86@example.org,Heather Rivera,1981-05-07,Jason Campbell,Jacquelinestad,MH,1979,45011.01
+95e363d8,Joseph Stevenson,nathaniel79@example.org,+1-211-311-0334x158,1982-08-27,Tammy Raymond,Luisburgh,PA,7144,35799.8
+cc600312,Anthony Becker,sotojason@example.org,001-513-842-3822x37469,1996-07-09,Emma Wolfe,Michaelport,NY,1262,7889.21
+53badc0d,Gregory Hicks,sandersphilip@example.org,001-553-551-7647x36218,1967-04-04,Aaron Hall,East Mark,DE,56758,28250.46
+59df2061,Ryan Leonard,nsexton@example.net,Joshua Reyes,1956-11-29,John King,Mitchellfort,CT,75546,17873.76
+9dc59ea7,Richard French,richardmatthew@example.com,Chris Mcdonald,1960-01-20,Danielle Jones,South Jacquelineside,LA,90032,23724.2
+0196935b,Sheryl Campbell,amurray@example.net,Thomas Davis,2000-06-24,Katie Smith,West Matthewhaven,NY,82572,13918.64
+2985edcd,Keith Herrera,tiffany48@example.net,James Lowe,1952-09-13,Nicholas Scott,Lake Alyssabury,OK,32628,29969.1
+b10cabd7,Dr. Derek Quinn MD,lisahayes@example.org,Michael Howard,1960-10-08,Jodi Thompson,Darleneville,AZ,43764,9357.84
+5a46ff9b,Crystal Barnett,lstanley@example.net,Tiffany Snyder MD,1978-12-23,Clifford Brown,Lake Josephburgh,IN,99854,3732.21
+d42c622f,Cynthia Howell,carsonbrianna@example.com,James Black,1950-08-12,Steven Conley,Jerryville,PR,9850,5917.16
+ee4478e2,Roger Olson,hjones@example.net,(991)932-9167x6866,1965-08-24,Michael Hunt,East Keith,VT,77836,43600.58
+9c7958e9,Teresa Thomas,kanedaniel@example.org,Gregory Huffman,1977-05-13,Michele Holmes,Knoxberg,CT,94765,14931.84
+b892bbd3,Jamie Mathis,qvaldez@example.org,Melanie Davis,2004-06-22,Jimmy Wiggins,Eddieberg,MI,48547,28599.3
+a37387a9,Olivia Richmond,bryantsuzanne@example.com,417-708-2244x19096,1996-07-25,Jennifer Walsh,Paulshire,PA,17267,25335.89
+e3eb5838,Michael Garcia,evansheather@example.com,Jasmine Wolfe,2005-09-06,George Shaffer,Silvabury,ME,27313,8769.17
+72a7d95d,Richard Green,ballscott@example.org,Anthony Gentry,1949-10-16,Phyllis Roberts,Port Jaime,WA,33286,40655.44
+7d33e592,Phillip Thornton,fmiller@example.com,Rachel Herrera,1993-04-23,Kimberly Carroll,Lesliebury,VT,56233,35466.97
+bd7c90e4,Jeremy Barron,tracyreyes@example.net,Cassandra Greene,1967-02-10,Kevin Reynolds,South Michaelmouth,KY,77344,40437.31
+7b760dde,Suzanne Colon,catkins@example.org,335-350-3395x31351,1960-10-12,Jonathan Smith,South Amyland,AZ,43394,20130.65
+90e95576,Dr. Nathaniel Mendoza,william03@example.org,Brent Anderson,1982-09-17,Mark Garcia,Jonesville,MA,97647,31849.43
+a7065926,Margaret Garcia,garciaalyssa@example.org,Lindsey Davis,2001-10-01,Aaron Howard,Jasonhaven,IN,82170,5067.0
+93d10b18,Derek Johnson,mhendrix@example.org,Daniel Daniels,2001-09-10,Kimberly Mckenzie,North Christopher,RI,97319,37601.89
+bdba2d38,Donald Fields,leonsamantha@example.org,Steven Drake,1982-01-16,Timothy Phillips,Lake Rhonda,WI,66098,11339.99
+db2de163,Michael Rodriguez,laurencollins@example.com,Patrick Rice,1977-11-05,Rachel Buchanan,Jenkinsfurt,OH,5661,43355.31
+7526ee9d,Dakota Norris,qboone@example.net,Dylan Taylor,2002-11-18,Casey Baldwin,New William,VA,94819,9493.42
+e68df4a4,Christopher Yang,lcarlson@example.net,Angela Cruz,1955-06-28,Jacqueline Shaffer,North Josebury,VI,57276,31081.1
+8f63f94c,Elizabeth Daniels,john38@example.org,Daisy Howard,1996-10-21,Andrew Ferrell,Port Katherine,SC,44950,42488.72
+20b98ef0,Kelly Ayers,melissa12@example.com,Michael Blevins,1949-01-17,Brian Patrick,New Rachaelshire,AS,26789,41028.06
+9eaa9513,Linda Alexander,hhowell@example.org,Gavin Rowe,1979-06-11,Paula Johnston,East Phillip,PR,17065,2770.44
+bf63b8ae,Jeff Webb,mcdanielbreanna@example.org,Victor Williams,1961-07-14,Thomas Edwards,Christopherborough,UT,13797,8978.64

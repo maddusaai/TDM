@@ -23,7 +23,6 @@ export const WS_NAV = [
   { icon: Upload,          label: 'Data Inventory',  tab: 'data-inventory' },
   { icon: Tag,             label: 'Classification',  tab: 'data-classification' },
   { icon: Shield,          label: 'Masking Rules',   tab: 'masking-rules' },
-  { icon: Play,            label: 'Create Pipeline', tab: 'create-pipeline' },
   { icon: List,            label: 'Pipelines',       tab: 'pipelines' },
   { icon: Eye,             label: 'Masked Assets',   tab: 'masked-assets' },
   { icon: Clock,           label: 'Jobs',            tab: 'jobs' },
@@ -41,13 +40,64 @@ export const sampleColumns = [
   { name: 'account_balance', type: 'decimal', pii: false, rule: 'No Masking' },
 ];
 
+// ─── Org users ───────────────────────────────────────────────────────────────
+// Single source of truth for all users in the org.
+// role: admin | developer | qa | viewer
+// allowed_environments: which sandbox target envs this role can use
+export const ORG_USERS = [
+  {
+    id: 'usr-001',
+    email: 'admin@tdm.com',
+    name: 'TDM Admin',
+    role: 'admin',
+    allowed_environments: ['DEV', 'QA', 'PROD'],
+  },
+  {
+    id: 'usr-002',
+    email: 'developer@tdm.com',
+    name: 'TDM Developer',
+    role: 'developer',
+    allowed_environments: ['DEV'],
+  },
+  {
+    id: 'usr-003',
+    email: 'dev.priya@tdm.com',
+    name: 'Priya Shah',
+    role: 'developer',
+    allowed_environments: ['DEV'],
+  },
+  {
+    id: 'usr-004',
+    email: 'qa.alex@tdm.com',
+    name: 'Alex Chen',
+    role: 'qa',
+    allowed_environments: ['DEV', 'QA'],
+  },
+  {
+    id: 'usr-005',
+    email: 'dev.maya@tdm.com',
+    name: 'Maya Patel',
+    role: 'developer',
+    allowed_environments: ['DEV'],
+  },
+];
+
 export const blueprintWorkspaces = [
   {
+    id: 'ws-001',
     name: 'Claims Modernization',
     owner: 'Priya Shah',
-    environment: 'DEV',
+    owner_id: 'usr-003',
+    created_by: 'usr-001',
+    status: 'Active',
     description:
       'Workspace for claims source systems, sandbox schemas, masked data, and QA-ready pipelines.',
+    connector_ids: ['conn-001', 'conn-002'],
+    members: [
+      { user_id: 'usr-001', name: 'TDM Admin',   email: 'admin@tdm.com',       role: 'admin' },
+      { user_id: 'usr-003', name: 'Priya Shah',   email: 'dev.priya@tdm.com',   role: 'developer' },
+      { user_id: 'usr-004', name: 'Alex Chen',    email: 'qa.alex@tdm.com',     role: 'qa' },
+    ],
     domains: [
       {
         name: 'Claims',
@@ -64,11 +114,20 @@ export const blueprintWorkspaces = [
     ],
   },
   {
+    id: 'ws-002',
     name: 'Customer 360 QA',
     owner: 'Alex Chen',
-    environment: 'QA',
+    owner_id: 'usr-004',
+    created_by: 'usr-001',
+    status: 'Active',
     description:
       'Workspace for customer profile testing, contact masking, and regression-ready datasets.',
+    connector_ids: ['conn-001', 'conn-003'],
+    members: [
+      { user_id: 'usr-001', name: 'TDM Admin',   email: 'admin@tdm.com',       role: 'admin' },
+      { user_id: 'usr-004', name: 'Alex Chen',    email: 'qa.alex@tdm.com',     role: 'qa' },
+      { user_id: 'usr-002', name: 'TDM Developer',email: 'developer@tdm.com',   role: 'developer' },
+    ],
     domains: [
       {
         name: 'Customer',
@@ -85,11 +144,19 @@ export const blueprintWorkspaces = [
     ],
   },
   {
+    id: 'ws-003',
     name: 'Salesforce Sandbox',
     owner: 'Maya Patel',
-    environment: 'UAT',
+    owner_id: 'usr-005',
+    created_by: 'usr-001',
+    status: 'Draft',
     description:
       'Workspace for CRM object extraction and masked sandbox refresh validation.',
+    connector_ids: ['conn-004'],
+    members: [
+      { user_id: 'usr-001', name: 'TDM Admin',   email: 'admin@tdm.com',       role: 'admin' },
+      { user_id: 'usr-005', name: 'Maya Patel',   email: 'dev.maya@tdm.com',    role: 'developer' },
+    ],
     domains: [
       {
         name: 'CRM',
@@ -103,36 +170,44 @@ export const blueprintWorkspaces = [
 
 export const blueprintConnections = [
   {
+    id: 'conn-001',
     name: 'SQL_PROD_HEALTHCARE',
     type: 'SQL Server',
     sourceType: 'DB',
     connection: 'sql-prod.company.com:1433/DDB',
     status: 'Connected',
     purpose: 'Production-like source metadata and schema discovery',
+    created_by: 'usr-001',
   },
   {
+    id: 'conn-002',
     name: 'DBX_TDM_MASKED',
     type: 'Databricks',
     sourceType: 'Target',
     connection: 'healthcare_catalog.patient_schema',
     status: 'Connected',
     purpose: 'Masked test data landing and execution orchestration',
+    created_by: 'usr-001',
   },
   {
+    id: 'conn-003',
     name: 'SQL_QA_MASKED',
     type: 'SQL Server',
     sourceType: 'Target',
     connection: 'sql-qa.company.com:1433/TDM_QA',
     status: 'Draft',
     purpose: 'QA target for project-specific sandbox outputs',
+    created_by: 'usr-001',
   },
   {
+    id: 'conn-004',
     name: 'SFTP_MEMBER_FEED',
     type: 'SFTP',
     sourceType: 'File',
     connection: 'sftp://feeds.company.com/inbound/member',
     status: 'Connected',
     purpose: 'Future file-based source ingestion',
+    created_by: 'usr-001',
   },
 ];
 
@@ -293,34 +368,49 @@ export const connectorTableData = {
 
 export const blueprintPipelines = [
   {
+    id: 'pipe-001',
     name: 'Claims_Daily_Masking',
     workspace: 'Claims Modernization',
+    workspace_id: 'ws-001',
     source: 'SQL_PROD_HEALTHCARE',
+    source_connector_id: 'conn-001',
     target: 'DBX_TDM_MASKED',
+    target_connector_id: 'conn-002',
     sandbox: 'person_a_project_001_dev_schema',
     lastRun: '2026-06-12 08:30 AM',
     tables: ['patient_records', 'appointments', 'insurance_claims'],
     status: 'Ready',
+    created_by: 'usr-001',
   },
   {
+    id: 'pipe-002',
     name: 'Patient_QA_Refresh',
     workspace: 'Claims Modernization',
+    workspace_id: 'ws-001',
     source: 'SQL_PROD_HEALTHCARE',
+    source_connector_id: 'conn-001',
     target: 'SQL_QA_MASKED',
+    target_connector_id: 'conn-003',
     sandbox: 'person_b_project_002_qa_schema',
     lastRun: '2026-06-11 09:15 PM',
     tables: ['patient_records', 'insurance_claims'],
     status: 'Draft',
+    created_by: 'usr-001',
   },
   {
+    id: 'pipe-003',
     name: 'Regression_Claims_Masking',
     workspace: 'Customer 360 QA',
+    workspace_id: 'ws-002',
     source: 'SQL_PROD_HEALTHCARE',
+    source_connector_id: 'conn-001',
     target: 'DBX_TDM_MASKED',
+    target_connector_id: 'conn-002',
     sandbox: 'person_c_project_003_regression_schema',
     lastRun: 'Not executed yet',
     tables: ['patient_records', 'appointments', 'insurance_claims', 'customer_profile'],
     status: 'In Review',
+    created_by: 'usr-001',
   },
 ];
 

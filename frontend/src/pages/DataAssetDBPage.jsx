@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   Database, ArrowLeft, Table2, ChevronRight, AlertTriangle,
@@ -9,6 +9,40 @@ import { Button } from '../components/ui/Button';
 import { API_BASE_URL } from '../lib/constants';
 
 const MASKING_RULES = ['No Masking', 'Hash', 'Fake Value', 'Partial Masking', 'Date Shift'];
+const CLASSIFICATIONS = ['PII', 'Non-PII', 'Sensitive', 'Confidential'];
+
+const PII_REGEX = /name|email|phone|ssn|dob|address|insurance|date|birth|passport|license|national|id$/i;
+
+function suggestClassification(col) {
+  return PII_REGEX.test(col) ? 'PII' : 'Non-PII';
+}
+function suggestMaskingRule(col, classification) {
+  if (classification === 'Non-PII') return 'No Masking';
+  if (/date|dob|birth/i.test(col)) return 'Date Shift';
+  if (/id$|ssn|passport|license/i.test(col)) return 'Hash';
+  if (/name|email|phone|address|insurance/i.test(col)) return 'Fake Value';
+  return 'No Masking';
+}
+
+// Simulated drift item — shown in Drift Inbox when redirected from Run New Job modal
+const SIMULATED_DRIFT_ITEM = {
+  review_id: 'sim-drift-001',
+  drift_type: 'ADDITIVE_DRIFT',
+  last_approved_version_label: 'V1',
+  detected_at: new Date().toISOString(),
+  simulated: true,
+  diff: {
+    added: ['insurance_provider', 'discharge_date'],
+    added_detail: [
+      { column: 'insurance_provider', type: 'varchar(100)' },
+      { column: 'discharge_date', type: 'date' },
+    ],
+    removed: ['contact_number'],
+    type_changed: [],
+  },
+  suggested_rules: { insurance_provider: 'Fake Value', discharge_date: 'Date Shift' },
+  suggested_classification: { insurance_provider: 'PII', discharge_date: 'PII' },
+};
 
 const ENV_COLORS = {
   PROD: 'bg-red-50 text-red-600',
@@ -83,13 +117,27 @@ export default function DataAssetDBPage() {
   const [versions, setVersions] = useState([]);
   const [inbox, setInbox] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('tables');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => {
+    const t = searchParams.get('tab');
+    return TABS.some((tb) => tb.key === t) ? t : 'tables';
+  });
 
   const [reviewState, setReviewState] = useState({});
   const [acting, setActing] = useState(null);
   const [expandedDiffTables, setExpandedDiffTables] = useState({});
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState(null);
+
+  // Persist simulated drift resolution + synthetic V2 in sessionStorage so it
+  // survives tab switches and back-navigation.
+  const simKey = `tdm_sim_drift_${connectionId}`;
+  const [simulatedResolved, setSimulatedResolved] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(simKey))?.resolved ?? false; } catch { return false; }
+  });
+  const [simulatedV2, setSimulatedV2] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(simKey))?.v2 ?? null; } catch { return null; }
+  });
 
   const fetchAll = async () => {
     setLoading(true);
@@ -128,16 +176,23 @@ export default function DataAssetDBPage() {
   // representative sandbox for this DB (first one found)
   const repSandbox = dbTables.find((t) => t.sandbox)?.sandbox || null;
 
-  // workspace versions for this DB's sandbox
-  const workspaceVersions = repSandbox
-    ? [...versions]
-        .filter((v) => v.project_id === repSandbox.project_id && v.target_environment === repSandbox.target_environment)
-        .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''))
-    : [];
+  // workspace versions for this DB's sandbox — include simulated V2 if approved
+  const workspaceVersions = (() => {
+    const base = repSandbox
+      ? [...versions]
+          .filter((v) => v.project_id === repSandbox.project_id && v.target_environment === repSandbox.target_environment)
+          .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''))
+      : [];
+    if (simulatedV2 && !base.find((v) => v.metadata_version_id === simulatedV2.metadata_version_id)) {
+      // Mark all existing as SUPERSEDED, add V2 as ACTIVE
+      return [...base.map((v) => ({ ...v, status: 'SUPERSEDED' })), simulatedV2];
+    }
+    return base;
+  })();
 
-  const activeVersion = repSandbox
+  const activeVersion = simulatedV2 || (repSandbox
     ? versions.find((v) => v.metadata_version_id === repSandbox.active_metadata_version_id)
-    : null;
+    : null);
 
   // drift inbox for this DB's sandbox
   const dbInbox = repSandbox
@@ -151,16 +206,25 @@ export default function DataAssetDBPage() {
   const initReviewState = (review) => {
     const added = review.diff?.added || [];
     const rules = {};
-    added.forEach((col) => { rules[col] = review.suggested_rules?.[col] || 'No Masking'; });
+    const classification = {};
+    added.forEach((col) => {
+      const cls = review.suggested_classification?.[col] || suggestClassification(col);
+      classification[col] = cls;
+      rules[col] = review.suggested_rules?.[col] || suggestMaskingRule(col, cls);
+    });
     setReviewState((prev) => ({
       ...prev,
-      [review.review_id]: { acceptedCols: new Set(added), rules, acceptRemoved: false, acceptTypeChanges: false, changeSummary: '', rejecting: false, rejectReason: '' },
+      [review.review_id]: { acceptedCols: new Set(added), rules, classification, acceptRemoved: false, acceptTypeChanges: false, changeSummary: '', rejecting: false, rejectReason: '' },
     }));
   };
 
   useEffect(() => {
     dbInbox.forEach((r) => { if (!reviewState[r.review_id]) initReviewState(r); });
   }, [dbInbox.length]);
+
+  useEffect(() => {
+    if (!reviewState[SIMULATED_DRIFT_ITEM.review_id]) initReviewState(SIMULATED_DRIFT_ITEM);
+  }, []);
 
   const rs = (id) => reviewState[id] || {};
   const setRs = (id, patch) => setReviewState((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -203,6 +267,53 @@ export default function DataAssetDBPage() {
     } catch (err) {
       setScanMsg({ type: 'error', text: err.response?.data?.message || 'Approve failed.' });
     } finally { setActing(null); }
+  };
+
+  const approveSimulatedDrift = (state) => {
+    // Build a synthetic V2 version that reflects the approved changes.
+    const addedCols = Array.from(state.acceptedCols || SIMULATED_DRIFT_ITEM.diff.added);
+    const removedCols = SIMULATED_DRIFT_ITEM.diff.removed;
+
+    // Snapshot: take V1 tables from workspaceVersions (if available) or a stub
+    const v1Snapshot = workspaceVersions.length > 0
+      ? { ...(workspaceVersions[workspaceVersions.length - 1].metadata_snapshot || {}) }
+      : { patient_records: [] };
+
+    // Apply drift to snapshot
+    const v2Snapshot = {};
+    for (const [tbl, cols] of Object.entries(v1Snapshot)) {
+      const kept = (cols || []).filter((c) => !removedCols.includes(c.name || c));
+      const newCols = addedCols.map((col) => ({
+        name: col,
+        type: SIMULATED_DRIFT_ITEM.diff.added_detail.find((d) => d.column === col)?.type || 'varchar',
+        classification: state.classification?.[col] || suggestClassification(col),
+        masking_rule: state.rules?.[col] || suggestMaskingRule(col, state.classification?.[col] || 'PII'),
+      }));
+      v2Snapshot[tbl] = [...kept, ...newCols];
+    }
+
+    const v2 = {
+      metadata_version_id: 'sim-v2-001',
+      version_label: 'V2',
+      status: 'ACTIVE',
+      change_summary: state.changeSummary || 'Schema updated: insurance_provider and discharge_date added; contact_number removed.',
+      predecessor_metadata_version_id: workspaceVersions[workspaceVersions.length - 1]?.metadata_version_id || null,
+      metadata_snapshot: v2Snapshot,
+      table_count: Object.keys(v2Snapshot).length,
+      column_count: Object.values(v2Snapshot).reduce((s, cols) => s + (cols?.length || 0), 0),
+      created_at: new Date().toISOString(),
+      masking_rules_applied: state.rules || {},
+      classification_applied: state.classification || {},
+      project_id: repSandbox?.project_id || null,
+      target_environment: repSandbox?.target_environment || null,
+      simulated: true,
+    };
+
+    // Persist to sessionStorage
+    sessionStorage.setItem(simKey, JSON.stringify({ resolved: true, v2 }));
+    setSimulatedResolved(true);
+    setSimulatedV2(v2);
+    setScanMsg({ type: 'success', text: 'Drift approved — V2 created with updated masking rules.' });
   };
 
   const rejectDrift = async (reviewId) => {
@@ -273,14 +384,14 @@ export default function DataAssetDBPage() {
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setActiveTab(t.key)}
+            onClick={() => { setActiveTab(t.key); setSearchParams({ tab: t.key }, { replace: true }); }}
             className={`px-5 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${
               activeTab === t.key ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
             {t.label}
-            {t.key === 'drift' && totalDrift > 0 && (
-              <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">{totalDrift}</span>
+            {t.key === 'drift' && (totalDrift > 0 || !simulatedResolved) && (
+              <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">{totalDrift + (simulatedResolved ? 0 : 1)}</span>
             )}
           </button>
         ))}
@@ -552,135 +663,310 @@ export default function DataAssetDBPage() {
       )}
 
       {/* ── Drift Inbox tab ── */}
-      {activeTab === 'drift' && (
-        <div className="space-y-4">
-          {dbInbox.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-[13px] text-slate-400">
-              No pending drift reviews. Click "Scan for Drift" to check for schema changes.
-            </div>
-          ) : dbInbox.map((review) => {
-            const state = rs(review.review_id);
-            const diff = review.diff || {};
-            const added = diff.added || [];
-            const removed = diff.removed || [];
-            const typeChanged = diff.type_changed || [];
-            const isActing = acting === review.review_id;
+      {activeTab === 'drift' && (() => {
+        const allReviews = [
+          ...(!simulatedResolved ? [SIMULATED_DRIFT_ITEM] : []),
+          ...dbInbox,
+        ];
 
-            return (
-              <div key={review.review_id} className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
-                <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${driftBadgeClass(review.drift_type)}`}>
-                    {review.drift_type === 'BREAKING_DRIFT' ? 'Breaking Drift' : 'Additive Drift'}
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    vs {review.last_approved_version_label} · {new Date(review.detected_at).toLocaleDateString()}
-                  </span>
-                </div>
-
-                <div className="grid gap-3 grid-cols-3">
-                  <div className="rounded-xl bg-emerald-50 p-3">
-                    <p className="text-[11px] font-semibold text-emerald-700">Added ({added.length})</p>
-                    {added.length === 0 && <p className="mt-1 text-[11px] text-slate-400">None</p>}
-                    {(diff.added_detail || added.map((c) => ({ column: c, type: '' }))).map((c) => (
-                      <p key={c.column} className="mt-1 text-[12px] text-slate-700">{c.column}{c.type ? ` (${c.type})` : ''}</p>
+        return (
+          <div className="space-y-5">
+            {/* Resolved simulated drift banner */}
+            {simulatedResolved && simulatedV2 && (
+              <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-600" />
+                <div>
+                  <p className="text-[13px] font-semibold text-emerald-800">Drift resolved — V2 created</p>
+                  <p className="mt-0.5 text-[12px] text-emerald-700">{simulatedV2.change_summary}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {Object.entries(simulatedV2.masking_rules_applied || {}).map(([col, rule]) => (
+                      <span key={col} className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[11px] text-slate-700">
+                        <span className="font-mono font-medium">{col}</span>
+                        <span className="mx-1 text-slate-400">·</span>
+                        <span className="text-[10px] uppercase tracking-wide text-indigo-600">{simulatedV2.classification_applied?.[col] || '—'}</span>
+                        <span className="mx-1 text-slate-400">·</span>
+                        {rule}
+                      </span>
                     ))}
                   </div>
-                  <div className="rounded-xl bg-rose-50 p-3">
-                    <p className="text-[11px] font-semibold text-rose-700">Removed ({removed.length})</p>
-                    {removed.length === 0 && <p className="mt-1 text-[11px] text-slate-400">None</p>}
-                    {removed.map((c) => <p key={c} className="mt-1 text-[12px] text-slate-700">{c}</p>)}
-                  </div>
-                  <div className="rounded-xl bg-amber-50 p-3">
-                    <p className="text-[11px] font-semibold text-amber-700">Type Changed ({typeChanged.length})</p>
-                    {typeChanged.length === 0 && <p className="mt-1 text-[11px] text-slate-400">None</p>}
-                    {typeChanged.map((c) => <p key={c.column} className="mt-1 text-[12px] text-slate-700">{c.column}: {c.from} → {c.to}</p>)}
-                  </div>
-                </div>
-
-                <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[12px] font-semibold text-slate-700">Review & Resolve</p>
-                  {added.length > 0 && (
-                    <div>
-                      <p className="mb-2 text-[11px] text-slate-500">Select new columns to include:</p>
-                      <div className="space-y-2">
-                        {added.map((col) => (
-                          <div key={col} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-2.5">
-                            <label className="flex cursor-pointer items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={state.acceptedCols?.has(col) ?? true}
-                                onChange={(e) => {
-                                  const s = new Set(state.acceptedCols || []);
-                                  e.target.checked ? s.add(col) : s.delete(col);
-                                  setRs(review.review_id, { acceptedCols: s });
-                                }}
-                              />
-                              <span className="font-mono text-[13px] text-slate-800">{col}</span>
-                            </label>
-                            {(state.acceptedCols?.has(col) ?? true) && (
-                              <select
-                                value={state.rules?.[col] || 'No Masking'}
-                                onChange={(e) => setRs(review.review_id, { rules: { ...state.rules, [col]: e.target.value } })}
-                                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] outline-none"
-                              >
-                                {MASKING_RULES.map((r) => <option key={r} value={r}>{r}</option>)}
-                              </select>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {removed.length > 0 && (
-                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-200 bg-white p-2.5">
-                      <input type="checkbox" checked={state.acceptRemoved || false} onChange={(e) => setRs(review.review_id, { acceptRemoved: e.target.checked })} className="mt-0.5" />
-                      <span className="text-[13px] text-slate-700">Accept removal of: <strong>{removed.join(', ')}</strong></span>
-                    </label>
-                  )}
-                  {typeChanged.length > 0 && (
-                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-200 bg-white p-2.5">
-                      <input type="checkbox" checked={state.acceptTypeChanges || false} onChange={(e) => setRs(review.review_id, { acceptTypeChanges: e.target.checked })} className="mt-0.5" />
-                      <span className="text-[13px] text-slate-700">Accept type changes: <strong>{typeChanged.map((c) => `${c.column} (${c.from}→${c.to})`).join(', ')}</strong></span>
-                    </label>
-                  )}
-                  <div>
-                    <label className="mb-1 block text-[11px] font-medium text-slate-600">Change Summary <span className="text-rose-400">*</span></label>
-                    <input
-                      type="text"
-                      value={state.changeSummary || ''}
-                      onChange={(e) => setRs(review.review_id, { changeSummary: e.target.value })}
-                      placeholder="Why are you approving this change?"
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <Button onClick={() => approveDrift(review.review_id)} disabled={isActing} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-[13px]">
-                      {isActing ? 'Working…' : 'Approve & Create Version'}
-                    </Button>
-                    <Button variant="outline" onClick={() => setRs(review.review_id, { rejecting: !state.rejecting })} className="rounded-xl text-[13px]">
-                      Reject
-                    </Button>
-                  </div>
-                  {state.rejecting && (
-                    <div className="flex gap-2 pt-1">
-                      <input
-                        type="text"
-                        value={state.rejectReason || ''}
-                        onChange={(e) => setRs(review.review_id, { rejectReason: e.target.value })}
-                        placeholder="Reason for rejection…"
-                        className="flex-1 rounded-lg border border-rose-200 bg-white px-3 py-2 text-[13px] outline-none"
-                      />
-                      <Button onClick={() => rejectDrift(review.review_id)} disabled={isActing} className="rounded-xl bg-rose-600 hover:bg-rose-700 text-[13px]">
-                        Confirm Reject
-                      </Button>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => setActiveTab('versions')}
+                    className="mt-2 text-[12px] font-medium text-indigo-600 hover:underline"
+                  >
+                    View in Schema Versions →
+                  </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
+
+            {allReviews.length === 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-[13px] text-slate-400">
+                No pending drift reviews. Click &quot;Scan for Drift&quot; to check for schema changes.
+              </div>
+            )}
+
+            {allReviews.map((review) => {
+              const state = rs(review.review_id);
+              const diff = review.diff || {};
+              const added = diff.added || [];
+              const addedDetail = diff.added_detail || added.map((c) => ({ column: c, type: '' }));
+              const removed = diff.removed || [];
+              const typeChanged = diff.type_changed || [];
+              const isActing = acting === review.review_id;
+
+              const handleClassificationChange = (col, cls) => {
+                const newClassification = { ...(state.classification || {}), [col]: cls };
+                const newRules = { ...(state.rules || {}) };
+                if (cls === 'Non-PII') newRules[col] = 'No Masking';
+                else if (newRules[col] === 'No Masking') newRules[col] = suggestMaskingRule(col, cls);
+                setRs(review.review_id, { classification: newClassification, rules: newRules });
+              };
+
+              const allNewColsConfigured = added.every((col) =>
+                !(state.acceptedCols?.has(col) ?? true) || (state.classification?.[col] && state.rules?.[col])
+              );
+
+              return (
+                <div key={review.review_id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  {/* Card header */}
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${driftBadgeClass(review.drift_type)}`}>
+                        {review.drift_type === 'BREAKING_DRIFT' ? 'Breaking Drift' : 'Additive Drift'}
+                      </span>
+                      {review.simulated && (
+                        <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-semibold text-indigo-600">
+                          Simulated
+                        </span>
+                      )}
+                      <span className="text-[12px] text-slate-400">
+                        vs {review.last_approved_version_label} · {new Date(review.detected_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                      {added.length > 0 && <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">+{added.length} added</span>}
+                      {removed.length > 0 && <span className="rounded-full bg-rose-50 px-2 py-0.5 font-medium text-rose-700">−{removed.length} removed</span>}
+                      {typeChanged.length > 0 && <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-700">~{typeChanged.length} changed</span>}
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-5 space-y-5">
+                    {/* ── Newly Added Columns: Classify & Mask ── */}
+                    {added.length > 0 && (
+                      <div>
+                        <div className="mb-3 flex items-center justify-between">
+                          <div>
+                            <p className="text-[13px] font-semibold text-slate-800">Classify &amp; Mask New Columns</p>
+                            <p className="text-[12px] text-slate-500 mt-0.5">Set PII classification and masking rule for each new column before approving.</p>
+                          </div>
+                          {allNewColsConfigured && (
+                            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">
+                              <CheckCircle2 size={12} /> All configured
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="overflow-hidden rounded-xl border border-slate-200">
+                          <table className="w-full text-left text-[13px]">
+                            <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                              <tr>
+                                <th className="px-4 py-3 w-6"></th>
+                                <th className="px-4 py-3">Column</th>
+                                <th className="px-4 py-3">Type</th>
+                                <th className="px-4 py-3">AI Suggestion</th>
+                                <th className="px-4 py-3">Classification</th>
+                                <th className="px-4 py-3">Masking Rule</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {addedDetail.map(({ column, type }) => {
+                                const included = state.acceptedCols?.has(column) ?? true;
+                                const classification = state.classification?.[column] || suggestClassification(column);
+                                const rule = state.rules?.[column] || 'No Masking';
+                                const aiSuggestedCls = suggestClassification(column);
+                                const isNonPii = classification === 'Non-PII';
+
+                                return (
+                                  <tr key={column} className={`bg-white ${!included ? 'opacity-40' : ''}`}>
+                                    <td className="px-4 py-3">
+                                      <input
+                                        type="checkbox"
+                                        checked={included}
+                                        onChange={(e) => {
+                                          const s = new Set(state.acceptedCols || []);
+                                          e.target.checked ? s.add(column) : s.delete(column);
+                                          setRs(review.review_id, { acceptedCols: s });
+                                        }}
+                                        className="accent-indigo-600"
+                                      />
+                                    </td>
+                                    <td className="px-4 py-3 font-mono font-medium text-slate-900">{column}</td>
+                                    <td className="px-4 py-3 text-slate-500 font-mono text-[11px]">{type || '—'}</td>
+                                    <td className="px-4 py-3">
+                                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${aiSuggestedCls === 'PII' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                        {aiSuggestedCls}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <select
+                                        value={classification}
+                                        disabled={!included}
+                                        onChange={(e) => handleClassificationChange(column, e.target.value)}
+                                        className={`rounded-lg border px-2.5 py-1.5 text-[12px] outline-none ${
+                                          classification === 'PII' ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                          : classification === 'Sensitive' || classification === 'Confidential' ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                          : 'border-slate-200 bg-white text-slate-600'
+                                        }`}
+                                      >
+                                        {CLASSIFICATIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                                      </select>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <select
+                                        value={rule}
+                                        disabled={!included || isNonPii}
+                                        onChange={(e) => setRs(review.review_id, { rules: { ...state.rules, [column]: e.target.value } })}
+                                        className={`rounded-lg border px-2.5 py-1.5 text-[12px] outline-none ${
+                                          isNonPii ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-400'
+                                          : 'border-slate-200 bg-white text-slate-700'
+                                        }`}
+                                      >
+                                        {MASKING_RULES.map((r) => <option key={r} value={r}>{r}</option>)}
+                                      </select>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Removed Columns ── */}
+                    {removed.length > 0 && (
+                      <div>
+                        <p className="mb-2 text-[13px] font-semibold text-slate-800">Removed Columns</p>
+                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-rose-100 bg-rose-50 p-4">
+                          <input
+                            type="checkbox"
+                            checked={state.acceptRemoved || false}
+                            onChange={(e) => setRs(review.review_id, { acceptRemoved: e.target.checked })}
+                            className="mt-0.5 accent-rose-600"
+                          />
+                          <div>
+                            <p className="text-[13px] font-medium text-rose-800">Accept removal of these columns</p>
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {removed.map((c) => (
+                                <span key={c} className="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-mono font-medium text-rose-700">{c}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    )}
+
+                    {/* ── Type Changes ── */}
+                    {typeChanged.length > 0 && (
+                      <div>
+                        <p className="mb-2 text-[13px] font-semibold text-slate-800">Type Changes</p>
+                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-amber-100 bg-amber-50 p-4">
+                          <input
+                            type="checkbox"
+                            checked={state.acceptTypeChanges || false}
+                            onChange={(e) => setRs(review.review_id, { acceptTypeChanges: e.target.checked })}
+                            className="mt-0.5 accent-amber-600"
+                          />
+                          <div className="space-y-1">
+                            {typeChanged.map((c) => (
+                              <p key={c.column} className="text-[13px] text-slate-700 font-mono">
+                                {c.column}: <span className="text-rose-600">{c.from}</span> → <span className="text-emerald-600">{c.to}</span>
+                              </p>
+                            ))}
+                          </div>
+                        </label>
+                      </div>
+                    )}
+
+                    {/* ── Change Summary + Actions ── */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                      <p className="text-[12px] font-semibold text-slate-700">Finalize Review</p>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                          Change Summary <span className="text-rose-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={state.changeSummary || ''}
+                          onChange={(e) => setRs(review.review_id, { changeSummary: e.target.value })}
+                          placeholder="Describe why you're approving this schema change…"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-indigo-400"
+                        />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        {review.simulated ? (
+                          <Button
+                            onClick={() => approveSimulatedDrift(state)}
+                            disabled={!state.changeSummary?.trim() || !allNewColsConfigured}
+                            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-[13px]"
+                          >
+                            <CheckCircle2 size={14} className="mr-1.5" /> Approve &amp; Create V2
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => approveDrift(review.review_id)}
+                            disabled={isActing || !state.changeSummary?.trim() || !allNewColsConfigured}
+                            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-[13px]"
+                          >
+                            {isActing ? 'Working…' : 'Approve & Create Version'}
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => setRs(review.review_id, { rejecting: !state.rejecting })}
+                          className="rounded-xl text-[13px]"
+                        >
+                          Reject
+                        </Button>
+                        {!allNewColsConfigured && added.length > 0 && (
+                          <span className="text-[11px] text-amber-600 flex items-center gap-1">
+                            <AlertTriangle size={12} /> Configure all new columns before approving
+                          </span>
+                        )}
+                      </div>
+                      {state.rejecting && (
+                        <div className="flex gap-2 pt-1">
+                          <input
+                            type="text"
+                            value={state.rejectReason || ''}
+                            onChange={(e) => setRs(review.review_id, { rejectReason: e.target.value })}
+                            placeholder="Reason for rejection…"
+                            className="flex-1 rounded-lg border border-rose-200 bg-white px-3 py-2 text-[13px] outline-none"
+                          />
+                          <Button
+                            onClick={() => {
+                              if (review.simulated) {
+                                sessionStorage.setItem(simKey, JSON.stringify({ resolved: true, v2: null }));
+                                setSimulatedResolved(true);
+                              } else {
+                                rejectDrift(review.review_id);
+                              }
+                            }}
+                            disabled={isActing}
+                            className="rounded-xl bg-rose-600 hover:bg-rose-700 text-[13px]"
+                          >
+                            Confirm Reject
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }

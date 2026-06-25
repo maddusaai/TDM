@@ -1,0 +1,101 @@
+account_id,customer_id,account_type,account_status,open_date,balance,branch_code
+c0eaeabe,71eff4a8,Savings,Closed,2023-11-04,58****82,BR837
+76e55eab,c7f3f7c1,Loan,Closed,2023-06-22,68****23,BR882
+b4425f01,6bbc4c25,Checking,Active,2022-03-01,61***88,BR701
+90075bf5,8b06fdc3,Investment,Pending Review,2025-02-05,52****05,BR190
+01db2eba,b0d35961,Credit,Pending Review,2024-04-12,27****06,BR908
+35349ba9,94761d1b,Loan,Closed,2019-03-29,76****87,BR311
+f385cc12,2122a44d,Loan,Pending Review,2023-04-15,29****46,BR650
+89ba8c27,a9fbb40e,Loan,Inactive,2019-03-20,63****01,BR316
+e04777c9,c641711f,Credit,Closed,2022-09-06,18****64,BR853
+d834dd75,0a1b6f27,Investment,Pending Review,2025-09-10,34****43,BR861
+d4c7ec8a,fac96a0f,Checking,Active,2019-02-16,77****78,BR973
+88fe01e4,6e061a94,Checking,Closed,2019-04-13,51****85,BR500
+17c7c974,2875b302,Credit,Inactive,2020-07-13,74****94,BR250
+ac03f221,f5b9fb5f,Loan,Inactive,2023-12-08,65****51,BR839
+a55f04a5,3db37606,Credit,Active,2021-04-18,72****68,BR796
+7087c479,effcdaf2,Checking,Active,2023-11-03,66****45,BR362
+30984641,9795faf2,Savings,Active,2019-03-26,39****03,BR574
+2523e6bb,98fe60d0,Loan,Pending Review,2024-08-14,81****12,BR436
+842fe121,05570638,Loan,Active,2026-03-11,41**.8,BR778
+c33aa871,a5cb241c,Investment,Closed,2026-03-16,95***89,BR554
+404b096a,ba5260e1,Loan,Inactive,2019-04-07,52****06,BR203
+2125527e,d3e2e79a,Credit,Closed,2025-12-27,90***.6,BR312
+c7ced648,1ba598f1,Checking,Pending Review,2023-10-23,92****18,BR938
+0eabb229,7a94fd67,Checking,Closed,2024-05-04,34***.4,BR850
+310b4aab,b41463aa,Loan,Pending Review,2018-11-22,45****06,BR118
+c4606912,c13444fc,Checking,Closed,2019-04-02,91***21,BR421
+a006b8c0,58eca578,Savings,Inactive,2018-07-17,61****02,BR758
+28742d19,1bdfc4f9,Credit,Active,2019-03-29,55***55,BR112
+e92deb1f,417e5699,Savings,Pending Review,2023-02-27,34***32,BR349
+c02cfe76,36644cfb,Checking,Pending Review,2020-01-22,49****45,BR974
+e4ecd648,59ffb9ef,Loan,Active,2024-12-28,18****36,BR549
+12da954c,7f1b0545,Loan,Closed,2023-01-04,41****53,BR645
+11ff757d,07d1b539,Savings,Inactive,2023-01-22,84***38,BR561
+cb419572,95aaa5f0,Savings,Pending Review,2025-12-20,93****95,BR376
+247d4a71,b3e1ae77,Loan,Pending Review,2019-06-22,27****29,BR433
+1a1da9c4,70f0b602,Loan,Active,2024-02-22,85**96,BR947
+0ef77c9f,e495275b,Investment,Inactive,2024-07-22,26****38,BR568
+da5a1210,f5d34a09,Credit,Active,2024-03-22,70***17,BR468
+15aceeef,048fc720,Checking,Inactive,2021-08-12,95****83,BR630
+ed0d631e,7f56f1c5,Credit,Pending Review,2023-11-13,42****54,BR351
+c5b9a3f9,f45ec84a,Investment,Active,2025-05-12,43****77,BR421
+9c77f5cb,6d939cbf,Credit,Active,2022-08-09,55****55,BR371
+31b85b3d,125373dc,Loan,Active,2023-09-12,32****01,BR499
+7f42bdbc,64041b65,Credit,Closed,2019-06-21,42****46,BR617
+cc29d375,d88bb832,Savings,Pending Review,2018-07-10,17****38,BR143
+d86ae46a,eee47882,Loan,Inactive,2024-08-25,10****56,BR141
+3230b255,8ceba44c,Loan,Closed,2024-06-06,48****04,BR621
+fd2abdad,50751e47,Loan,Inactive,2022-10-12,79****08,BR695
+b0427113,5840ab63,Credit,Pending Review,2023-05-05,86****35,BR802
+35451947,b1270dbd,Checking,Inactive,2024-06-22,98****89,BR507
+7656cd05,9b0ab5cd,Loan,Active,2024-09-09,82****74,BR248
+bdb20478,98403be3,Checking,Closed,2021-10-24,81****27,BR798
+907250ae,0947c50b,Credit,Inactive,2018-07-05,77****46,BR527
+eb2b6232,a1549e05,Investment,Active,2022-03-25,50***92,BR527
+c8b76620,b3a1e8ae,Investment,Inactive,2020-03-28,93****05,BR648
+937cec52,d54457b9,Loan,Pending Review,2019-12-14,45***38,BR425
+2c6eb91e,78bb6336,Savings,Closed,2023-12-09,40***95,BR911
+75a1dd58,e09ac83a,Savings,Closed,2023-01-27,42****85,BR731
+cf914fae,847d3630,Investment,Closed,2019-11-30,44****08,BR274
+7004d418,7ac3e669,Investment,Active,2023-09-23,48****03,BR894
+8928d115,2c6b0022,Savings,Closed,2020-04-13,68****44,BR381
+e25eb25c,1388277b,Checking,Active,2024-03-01,98****63,BR998
+3abdf389,dbc72d7b,Checking,Closed,2023-12-07,10***92,BR636
+01100c06,a830900b,Investment,Pending Review,2022-12-18,84****72,BR222
+9fef9f3f,fff40988,Checking,Closed,2020-07-29,88****14,BR252
+f8d8e26b,0fae49c0,Checking,Pending Review,2018-08-29,29****02,BR538
+ecfc7518,e8ca2639,Loan,Active,2019-06-12,12****57,BR180
+f8ada2e3,ed2423da,Credit,Closed,2020-02-20,19****82,BR592
+98f9c24b,dcb2999b,Loan,Pending Review,2021-01-07,63****78,BR860
+4b6222ea,02a09551,Investment,Active,2021-08-06,33****24,BR937
+9c1e8f8f,1c5ba156,Investment,Inactive,2022-05-20,22****05,BR155
+ca1d49dc,d4113b3b,Checking,Closed,2024-09-29,65****53,BR770
+bb7762a7,5e40b2e5,Savings,Active,2019-12-25,53****71,BR785
+050dd2d2,f9b1863b,Checking,Closed,2021-02-09,64****12,BR333
+b12c5115,b91e6a21,Savings,Inactive,2024-08-21,43****14,BR596
+60582833,2db7b891,Loan,Pending Review,2022-08-09,95***.1,BR142
+4b1d572e,16887897,Credit,Inactive,2019-03-23,47***.4,BR489
+a6c785c2,852c62f9,Savings,Active,2018-09-01,12****56,BR312
+b74f24c5,04289dfb,Checking,Pending Review,2020-06-30,57****89,BR472
+a9e68093,47ef1fa8,Savings,Pending Review,2019-12-04,98****41,BR157
+8fb48194,c419b0a9,Savings,Active,2020-10-01,18****71,BR571
+5fe6b12a,17bd3841,Savings,Inactive,2019-10-27,57****64,BR628
+9a4c4f65,73238404,Investment,Pending Review,2021-03-16,67****17,BR241
+4f9b0275,6aa26df2,Credit,Inactive,2019-05-07,49****41,BR876
+99af8ad6,ea5716ea,Savings,Closed,2020-05-11,13****74,BR506
+1871e2cb,6bfeb59e,Checking,Closed,2022-11-20,93****11,BR552
+586ca874,86ffe45d,Savings,Closed,2024-10-16,30****41,BR357
+71d50c6c,476e36ff,Investment,Closed,2022-08-09,44***.8,BR429
+d91e4389,4386f462,Savings,Closed,2025-06-22,14****23,BR957
+62ce5dc4,db4f2698,Checking,Active,2021-11-16,57***52,BR108
+000e5885,807076c9,Checking,Closed,2018-10-20,87***.1,BR611
+6b47609e,d70d698d,Loan,Active,2023-11-22,16****69,BR648
+e49e401c,f3f2d074,Loan,Active,2020-04-07,29**.6,BR110
+9243d64e,2eb6b9ab,Loan,Active,2018-06-28,55****52,BR344
+a1bc94c9,fb22120d,Savings,Active,2018-12-07,89***.7,BR315
+f5968dba,ec2e3204,Investment,Active,2025-03-24,10****95,BR116
+f50fad43,5ad2599e,Credit,Active,2019-09-22,37****78,BR919
+cea72ffe,da595467,Credit,Inactive,2022-07-13,71****42,BR362
+c29e34d8,76355b59,Savings,Pending Review,2026-02-17,50***38,BR297
+41a87021,75487f81,Credit,Pending Review,2025-11-30,65****56,BR618

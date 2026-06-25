@@ -1,0 +1,58 @@
+{
+  "sandbox-001": {
+    "sandbox_id": "sandbox-001",
+    "owner": "alice",
+    "project_id": "HealthCare-Analytics",
+    "target_environment": "DEV",
+    "source_system": "SQL Server PROD",
+    "source_database": "DDB",
+    "source_schema": "dbo",
+    "sandbox_schema": "alice_healthcare_analytics_dev_schema",
+    "selected_tables": [
+      "patient_records",
+      "appointments",
+      "lab_results"
+    ],
+    "active_metadata_version_id": "dddbebee-c3e8-43d4-a11f-626be485032e",
+    "active_metadata_version_label": "V4",
+    "created_at": "2026-06-01T09:00:00",
+    "updated_at": "2026-06-23T18:55:16.956740"
+  },
+  "sandbox-002": {
+    "sandbox_id": "sandbox-002",
+    "owner": "bob",
+    "project_id": "HealthCare-Analytics",
+    "target_environment": "UAT",
+    "source_system": "SQL Server PROD",
+    "source_database": "DDB",
+    "source_schema": "dbo",
+    "sandbox_schema": "bob_healthcare_analytics_uat_schema",
+    "selected_tables": [
+      "patient_records",
+      "appointments"
+    ],
+    "active_metadata_version_id": "mv-004",
+    "active_metadata_version_label": "V2",
+    "created_at": "2026-06-05T10:00:00",
+    "updated_at": "2026-06-18T11:00:00"
+  },
+  "sandbox-003": {
+    "sandbox_id": "sandbox-003",
+    "owner": "carol",
+    "project_id": "Finance-Reporting",
+    "target_environment": "DEV",
+    "source_system": "SQL Server PROD",
+    "source_database": "DDB",
+    "source_schema": "dbo",
+    "sandbox_schema": "carol_finance_reporting_dev_schema",
+    "selected_tables": [
+      "transactions",
+      "accounts",
+      "audit_log"
+    ],
+    "active_metadata_version_id": "d684e0cc-7de3-4a36-8455-f7f3e5fb46f7",
+    "active_metadata_version_label": "V3",
+    "created_at": "2026-06-10T08:00:00",
+    "updated_at": "2026-06-24T11:41:04.364125"
+  }
+}

@@ -37,7 +37,6 @@ export default function WorkspacesPage() {
   const [newWorkspaceCreatedBy, setNewWorkspaceCreatedBy] = useState('Admin User');
   const [newWorkspaceDescription, setNewWorkspaceDescription] = useState('');
   const [newWorkspaceOwner, setNewWorkspaceOwner] = useState('');
-  const [newWorkspaceEnvironment, setNewWorkspaceEnvironment] = useState('Dev');
   const [openDomainKeys, setOpenDomainKeys] = useState({});
   const [openSandboxIds, setOpenSandboxIds] = useState({});
 
@@ -78,7 +77,6 @@ export default function WorkspacesPage() {
     setNewWorkspaceCreatedBy('Admin User');
     setNewWorkspaceDescription('');
     setNewWorkspaceOwner('');
-    setNewWorkspaceEnvironment('Dev');
     setCreateStep(1);
     setSelectedConnectorNames([]);
     setShowNewConnForm(false);
@@ -122,7 +120,6 @@ export default function WorkspacesPage() {
       owner: newWorkspaceOwner.trim() || newWorkspaceCreatedBy.trim() || 'Admin User',
       createdBy: newWorkspaceCreatedBy.trim() || 'Admin User',
       date: new Date().toISOString().slice(0, 10),
-      environment: newWorkspaceEnvironment,
       description: newWorkspaceDescription.trim() || 'Workspace created for source metadata, sandbox schemas, masked outputs, and pipeline execution.',
       status: 'Active',
       domains: [],
@@ -172,8 +169,6 @@ export default function WorkspacesPage() {
   }, {});
   const overlappingTables = Object.entries(tableUsage).filter(([, count]) => count > 1).map(([table]) => table);
 
-  const environmentOptions = ['Dev', 'UAT', 'Production', 'Sandbox'];
-
   return (
     <div className="space-y-5">
       <PageHeader
@@ -219,7 +214,7 @@ export default function WorkspacesPage() {
                 <tr>
                   <th className="px-3 py-2.5">Workspace Name</th>
                   <th className="px-3 py-2.5">Created By</th>
-                  <th className="px-3 py-2.5">Environment</th>
+                  <th className="px-3 py-2.5">Members</th>
                   <th className="px-3 py-2.5">Description</th>
                   <th className="px-3 py-2.5">Domains</th>
                   <th className="px-3 py-2.5">Status</th>
@@ -234,9 +229,7 @@ export default function WorkspacesPage() {
                   >
                     <td className="px-3 py-2.5 font-semibold text-slate-900">{workspace.name}</td>
                     <td className="px-3 py-2.5 text-slate-600">{workspace.createdBy || workspace.owner}</td>
-                    <td className="px-3 py-2.5">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-700">{workspace.environment}</span>
-                    </td>
+                    <td className="px-3 py-2.5 text-slate-600">{workspace.members?.length ?? 0}</td>
                     <td className="max-w-[360px] px-3 py-2.5 text-slate-600">
                       <span className="line-clamp-2">{workspace.description}</span>
                     </td>
@@ -453,12 +446,6 @@ export default function WorkspacesPage() {
                   <div>
                     <label className="mb-2 block text-[13px] font-semibold text-slate-700">Business Owner</label>
                     <input value={newWorkspaceOwner} onChange={(e) => setNewWorkspaceOwner(e.target.value)} placeholder="Owner name" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50" />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-[13px] font-semibold text-slate-700">Environment</label>
-                    <select value={newWorkspaceEnvironment} onChange={(e) => setNewWorkspaceEnvironment(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50">
-                      {environmentOptions.map((env) => <option key={env} value={env}>{env}</option>)}
-                    </select>
                   </div>
                   {workspaceError && <div className="md:col-span-2 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{workspaceError}</div>}
                 </div>

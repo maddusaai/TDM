@@ -72,8 +72,7 @@ export default function AdminLayout() {
     {
       label: 'Execute',
       items: [
-        { to: '/admin/create-pipeline', icon: Play, label: 'Pipeline Workspace' },
-        { to: '/admin/pipelines', icon: List, label: 'Existing Pipelines' },
+        { to: '/admin/pipelines', icon: List, label: 'Pipelines' },
         { to: '/admin/masked-assets', icon: Eye, label: 'Masked Data Assets' },
         { to: '/admin/job-history', icon: Clock, label: 'Job History' },
       ],

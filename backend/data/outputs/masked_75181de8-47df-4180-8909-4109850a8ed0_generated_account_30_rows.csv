@@ -1,0 +1,31 @@
+account_id,customer_id,account_type,account_status,open_date,balance,branch_code
+Robert Johnson,85ffe12c,Loan,Closed,2019-03-15,17097.06,BR359
+Stanley Kane,286f7b23,Savings,Inactive,2025-03-20,69051.48,BR842
+Jeffrey Williams,19499925,Checking,Closed,2024-09-19,79083.36,BR907
+Brandon Jones,c32fac3d,Investment,Active,2022-12-01,94535.98,BR864
+Jennifer Keith,914fe996,Savings,Closed,2022-10-04,82836.1,BR174
+Elaine White,6e4a6e7b,Loan,Closed,2025-11-01,6945.46,BR517
+John Love,aa4b02ec,Savings,Active,2021-02-16,6667.99,BR339
+Jessica Harris,362e94f8,Credit,Active,2025-01-01,93183.06,BR932
+Joseph Stafford,910cb163,Investment,Inactive,2021-12-19,69963.39,BR334
+Heather James,21f45e14,Loan,Inactive,2023-09-27,30059.34,BR939
+Emily Allen,c0fe01cb,Loan,Active,2020-12-24,50517.21,BR364
+Misty Davis,d51e5b14,Loan,Inactive,2021-05-10,23530.74,BR521
+Danielle Brock,1c881eed,Credit,Active,2023-06-22,81091.34,BR986
+Brandy Burke,1f966501,Loan,Active,2024-04-19,39375.78,BR136
+Mrs. Theresa Barr PhD,cefcf6ec,Savings,Pending Review,2025-01-21,44920.64,BR287
+James Compton,29d88fdc,Credit,Closed,2023-10-10,37539.79,BR807
+Tiffany Christian,142cf3ef,Savings,Inactive,2024-07-02,63453.77,BR763
+Michelle Gonzalez,bdc06601,Savings,Active,2021-03-31,25027.43,BR124
+Martha Hahn,26a2dbb4,Investment,Pending Review,2024-06-26,83999.24,BR461
+Robert Foster,e2016613,Savings,Pending Review,2022-03-01,8889.83,BR421
+Diana Dickerson,3809bc44,Investment,Pending Review,2023-01-12,30235.73,BR389
+Morgan Lee,e7fe0c6a,Savings,Inactive,2023-06-04,1837.93,BR231
+Tim Edwards,9ec5f828,Credit,Inactive,2024-10-23,93978.29,BR555
+Taylor Powell,726b3198,Loan,Closed,2019-03-04,10824.82,BR427
+David Bryant,2496164f,Credit,Active,2026-04-28,74358.79,BR339
+Justin Jones,1c99bc01,Loan,Active,2025-02-28,63030.33,BR383
+Daniel Hernandez,729bb4ab,Checking,Pending Review,2022-12-10,93913.14,BR267
+Cassandra Morales,3ba94ffa,Savings,Pending Review,2019-04-30,79811.67,BR797
+Tammy Martin,89b9ace5,Checking,Inactive,2021-11-26,76486.43,BR279
+Steven Coleman,3ccd69a4,Loan,Pending Review,2018-09-20,18097.75,BR687

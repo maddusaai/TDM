@@ -1,0 +1,51 @@
+employee_id,employee_name,email,phone_number,ssn,department,job_title,hire_date,employment_status,salary
+17751dec,Todd Bryant,emily06@example.com,62********32,747-70-5604,HR,Tree surgeon,2022-05-20,On Leave,129042
+c9aec78e,Sarah Benson,wayne10@example.org,(4***************77,202-78-8720,Finance,"Conservator, museum/gallery",2014-11-04,Terminated,171376
+6e49ee0a,Krista Dalton,kenneth79@example.com,+1*****************03,865-43-6138,HR,Animal technologist,2024-10-06,Terminated,167475
+d8eac656,Michelle Williams,scottmccoy@example.net,(4*********09,258-25-5054,Finance,"Engineer, control and instrumentation",2023-10-01,Active,173964
+889f4693,Dr. Casey Patterson,sgarcia@example.net,49********02,190-20-2084,Operations,"Surveyor, commercial/residential",2019-01-04,Terminated,77878
+5d6b70d7,Rachel Shields,brandon46@example.org,62************45,484-11-5147,Finance,Associate Professor,2015-05-19,Active,81457
+86af9c11,Jose Cordova II,richardhernandez@example.org,(9**************79,291-55-1616,HR,Quarry manager,2023-09-12,On Leave,52811
+927f63c4,Debra Miller,philip54@example.org,+1***********88,787-92-1020,Operations,"Teacher, primary school",2023-03-21,Terminated,148616
+243ffa5d,Jessica Allison,bartlettgilbert@example.com,(8*********59,748-13-3357,Finance,Youth worker,2014-10-05,Active,123124
+1c2be220,Jacob Richardson,amanda07@example.org,00*****************24,272-21-1255,IT,Pensions consultant,2024-03-27,Terminated,78736
+9c978460,Jasmine Singleton,vkemp@example.org,(7*************71,692-64-4390,Data Engineering,Maintenance engineer,2017-08-18,On Leave,118645
+bbd11d6c,Stephanie Underwood,pamela84@example.com,87******74,846-41-6677,Finance,Hydrologist,2019-05-06,Active,129604
+14ad28bc,Donna Huynh,aguirrejudy@example.org,81******85,233-89-3198,HR,"Designer, textile",2020-04-04,On Leave,172316
+969bc166,Brian Brooks,lisaatkinson@example.com,(3*********00,169-60-9116,HR,Materials engineer,2015-10-19,Active,74042
+491c6390,Nathaniel Blackwell,justin03@example.org,+1***************06,537-31-5517,Sales,Housing manager/officer,2017-02-13,On Leave,103651
+4c715205,Alyssa Lee,tiffanymeyers@example.org,34*************37,302-20-4666,Sales,Market researcher,2016-07-10,Terminated,77237
+66447d1c,Joseph Long,kdavis@example.com,52******23,781-64-4882,IT,"Accountant, chartered management",2022-01-12,Terminated,141782
+92943454,Cheryl Johnston,bharris@example.org,(5*********84,279-75-8426,Operations,Surgeon,2019-06-25,Active,121984
+6d28ac10,Nancy Sullivan,robertsoncarla@example.com,(2***************72,378-95-9892,HR,Chief Technology Officer,2024-10-01,On Leave,118585
+cb2809b1,Brenda Gaines,johnsonrebecca@example.net,(5*********69,419-72-5232,Finance,Hospital pharmacist,2025-03-29,On Leave,111263
+f0e9022b,Emily Bray,toddknapp@example.net,(6***************18,650-19-5953,Data Engineering,Fitness centre manager,2026-02-10,On Leave,50975
+7ffe08de,Phillip Page,cbuckley@example.com,78*************62,260-34-6669,Data Engineering,Call centre manager,2024-05-29,Active,56411
+b1d7094f,Mr. Raymond Dean,teresa09@example.org,86********33,145-93-5030,Operations,Archaeologist,2018-08-26,On Leave,58171
+04b188bd,Russell Jackson,jeanpham@example.com,+1***********64,502-98-6743,Data Engineering,Production engineer,2026-04-23,Active,141016
+6101ec82,Katie Horton,suerobertson@example.net,44********15,499-45-1359,Finance,IT consultant,2020-01-15,Active,165186
+21f6eb30,Mitchell Blair,oscarolsen@example.com,+1****************00,846-58-5556,Operations,"Therapist, sports",2024-01-19,Terminated,69186
+765372dc,William Gilmore,petersonashley@example.net,(5*************66,417-37-6511,IT,Gaffer,2023-05-04,On Leave,93207
+23fd344c,Dana Griffin,pacecathy@example.com,38********08,695-84-7653,IT,Podiatrist,2020-12-05,On Leave,163265
+054c73ba,Susan Torres,wangtimothy@example.net,72********53,326-66-2294,IT,Hydrographic surveyor,2021-09-12,On Leave,58078
+0837c659,Marie Gross,kevin53@example.net,(6**************91,060-14-3088,Operations,Video editor,2022-04-01,On Leave,87514
+efb5c83e,Shannon Griffin,fstout@example.org,00*****************83,819-60-4061,Finance,"Engineer, agricultural",2016-07-13,Active,58953
+41ba4929,Brandon Gordon,walkermaria@example.net,00*****************46,813-91-4398,HR,Audiological scientist,2025-07-26,On Leave,149925
+345366f0,Stephanie Clayton,steveharmon@example.com,54******85,647-81-4102,Finance,"Designer, multimedia",2020-01-24,On Leave,150478
+5682240f,Bethany Robinson,stephenseric@example.com,00******************16,384-14-0559,IT,Paramedic,2025-12-19,On Leave,66732
+97618453,Morgan Daniels,ncummings@example.com,46********21,787-55-2763,Operations,"Therapist, speech and language",2017-10-24,Terminated,52563
+98a05c17,Erica Mann,erinrichardson@example.org,78************87,275-98-3185,IT,Advertising copywriter,2021-09-01,Terminated,154310
+3106bc03,Michael Myers,zachary09@example.com,24********64,208-77-5602,Data Engineering,Surgeon,2018-01-31,Active,110403
+b6e27385,Jorge Stevens,felicia30@example.org,(8***************56,171-79-0054,Operations,Television production assistant,2019-01-24,Active,108856
+00c21257,Yvette Parks,charlesbeltran@example.net,(4**************00,362-91-7655,Data Engineering,Geophysical data processor,2023-09-02,Active,75324
+a0e89231,Richard Jimenez,christinaparker@example.com,(2*********71,705-24-1059,Data Engineering,Medical sales representative,2022-11-11,On Leave,66183
+00867d27,William Ware,evanlee@example.com,(4***************73,807-58-1060,Operations,Estate agent,2015-07-12,On Leave,114473
+52018ac7,Vincent Allen,tuckerlaura@example.com,(3*********79,724-50-1672,Finance,"Production assistant, television",2019-07-02,Active,170361
+a00300c5,James Holt,adam02@example.net,65********59,758-08-8230,Operations,"Designer, multimedia",2020-10-23,Terminated,175616
+31c5f2e7,Thomas Moore,seanharris@example.net,(9**************05,466-66-5833,Finance,Immigration officer,2016-02-10,Terminated,176380
+a79e4b9e,Justin Kelly,jeffery34@example.net,00******************42,104-21-1149,IT,"Doctor, hospital",2026-01-23,Active,174015
+b6e78773,Patricia Parker,jasmin84@example.org,48******87,145-67-2892,Sales,Music therapist,2021-09-24,Active,61753
+4856f4bf,Michelle Anderson,matthewtaylor@example.org,69**************63,528-59-4358,Finance,Risk manager,2019-10-06,On Leave,112977
+d877e7a5,Paul Vasquez,justin07@example.net,38********81,509-48-9589,Finance,Insurance underwriter,2016-06-18,Active,89917
+51e1f982,Michael Williams,kberg@example.com,(8*********14,803-37-6922,Sales,Jewellery designer,2015-03-27,Active,77357
+eaec5640,Jacqueline Gutierrez,roblesjames@example.org,+1***********79,645-65-3035,Sales,Therapeutic radiographer,2014-06-26,Terminated,93798

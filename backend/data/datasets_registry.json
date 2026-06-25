@@ -1,0 +1,288 @@
+{
+  "ds-001": {
+    "dataset_id": "ds-001",
+    "filename": "employees.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-001",
+    "database_name": "Employee Service DB",
+    "table_name": "employees",
+    "sandbox_id": "sandbox-001",
+    "sandbox_schema": "alice_healthcare_analytics_dev_schema",
+    "sandbox_owner": "alice",
+    "project_id": "HealthCare-Analytics",
+    "target_environment": "DEV",
+    "isolation_status": "ISOLATED",
+    "input_path": "C:\\Users\\venkata.cnr\\Desktop\\tdm\\TDM_PROTOTYPE_V1\\backend\\data\\generated\\4e20fad6-2b29-44bb-92e4-c8ca0e3026e0_generated_customer_20_rows.csv",
+    "schema_baseline": {
+      "emp_id": "integer",
+      "full_name": "string",
+      "email": "string",
+      "phone": "string",
+      "department_id": "integer",
+      "hire_date": "date",
+      "salary": "decimal"
+    },
+    "columns": [
+      { "name": "emp_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "full_name", "type": "string", "pii": true, "ai_suggested_rule": "Fake Value", "rule": "Fake Value", "override_allowed": true },
+      { "name": "email", "type": "string", "pii": true, "ai_suggested_rule": "Fake Value", "rule": "Fake Value", "override_allowed": true },
+      { "name": "phone", "type": "string", "pii": true, "ai_suggested_rule": "Fake Value", "rule": "Fake Value", "override_allowed": true },
+      { "name": "department_id", "type": "integer", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "hire_date", "type": "date", "pii": false, "ai_suggested_rule": "Date Shift", "rule": "Date Shift", "override_allowed": true },
+      { "name": "salary", "type": "decimal", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true }
+    ],
+    "row_count": 1200,
+    "created_at": "2026-06-20T14:30:00",
+    "updated_at": "2026-06-20T14:30:00"
+  },
+  "ds-002": {
+    "dataset_id": "ds-002",
+    "filename": "departments.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-001",
+    "database_name": "Employee Service DB",
+    "table_name": "departments",
+    "sandbox_id": "sandbox-001",
+    "sandbox_schema": "alice_healthcare_analytics_dev_schema",
+    "sandbox_owner": "alice",
+    "project_id": "HealthCare-Analytics",
+    "target_environment": "DEV",
+    "isolation_status": "ISOLATED",
+    "input_path": "C:\\Users\\venkata.cnr\\Desktop\\tdm\\TDM_PROTOTYPE_V1\\backend\\data\\generated\\a75febfb-9746-4c11-b85d-13000347a45e_generated_customer_100_rows.csv",
+    "schema_baseline": {
+      "dept_id": "integer",
+      "dept_name": "string",
+      "manager_id": "integer",
+      "location": "string"
+    },
+    "columns": [
+      { "name": "dept_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "dept_name", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "manager_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "location", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true }
+    ],
+    "row_count": 18,
+    "created_at": "2026-06-20T14:30:00",
+    "updated_at": "2026-06-20T14:30:00"
+  },
+  "ds-003": {
+    "dataset_id": "ds-003",
+    "filename": "payrolls.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-002",
+    "database_name": "Payroll Service DB",
+    "table_name": "payrolls",
+    "sandbox_id": "sandbox-003",
+    "sandbox_schema": "carol_finance_reporting_dev_schema",
+    "sandbox_owner": "carol",
+    "project_id": "Finance-Reporting",
+    "target_environment": "DEV",
+    "isolation_status": "ISOLATED",
+    "input_path": "C:\\Users\\venkata.cnr\\Desktop\\tdm\\TDM_PROTOTYPE_V1\\backend\\data\\generated\\ca3ff021-7650-4754-a459-e41a40da0adb_generated_employee_50_rows.csv",
+    "schema_baseline": {
+      "payroll_id": "integer",
+      "emp_id": "integer",
+      "pay_period": "date",
+      "gross_pay": "decimal",
+      "net_pay": "decimal",
+      "tax_withheld": "decimal"
+    },
+    "columns": [
+      { "name": "payroll_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "emp_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "pay_period", "type": "date", "pii": false, "ai_suggested_rule": "Date Shift", "rule": "Date Shift", "override_allowed": true },
+      { "name": "gross_pay", "type": "decimal", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "net_pay", "type": "decimal", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "tax_withheld", "type": "decimal", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true }
+    ],
+    "row_count": 4800,
+    "created_at": "2026-06-22T09:15:00",
+    "updated_at": "2026-06-22T09:15:00"
+  },
+  "ds-004": {
+    "dataset_id": "ds-004",
+    "filename": "payroll_details.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-002",
+    "database_name": "Payroll Service DB",
+    "table_name": "payroll_details",
+    "sandbox_id": "sandbox-003",
+    "sandbox_schema": "carol_finance_reporting_dev_schema",
+    "sandbox_owner": "carol",
+    "project_id": "Finance-Reporting",
+    "target_environment": "DEV",
+    "isolation_status": "ISOLATED",
+    "input_path": "C:\\Users\\venkata.cnr\\Desktop\\tdm\\TDM_PROTOTYPE_V1\\backend\\data\\generated\\001c45c4-be22-4680-964b-1e70c1741e83_generated_account_100_rows.csv",
+    "schema_baseline": {
+      "detail_id": "integer",
+      "payroll_id": "integer",
+      "deduction_type": "string",
+      "amount": "decimal"
+    },
+    "columns": [
+      { "name": "detail_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "payroll_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "deduction_type", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "amount", "type": "decimal", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true }
+    ],
+    "row_count": 14400,
+    "created_at": "2026-06-22T09:15:00",
+    "updated_at": "2026-06-22T09:15:00"
+  },
+  "ds-005": {
+    "dataset_id": "ds-005",
+    "filename": "pipelines.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-003",
+    "database_name": "Integration Service DB",
+    "table_name": "pipelines",
+    "sandbox_id": null,
+    "sandbox_schema": null,
+    "sandbox_owner": null,
+    "project_id": null,
+    "target_environment": null,
+    "isolation_status": "NO_SANDBOX",
+    "input_path": null,
+    "schema_baseline": {
+      "pipeline_id": "integer",
+      "name": "string",
+      "source": "string",
+      "target": "string",
+      "status": "string"
+    },
+    "columns": [
+      { "name": "pipeline_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "name", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "source", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "target", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "status", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true }
+    ],
+    "row_count": 42,
+    "created_at": "2026-06-21T10:00:00",
+    "updated_at": "2026-06-21T10:00:00"
+  },
+  "ds-006": {
+    "dataset_id": "ds-006",
+    "filename": "executions.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-003",
+    "database_name": "Integration Service DB",
+    "table_name": "executions",
+    "sandbox_id": null,
+    "sandbox_schema": null,
+    "sandbox_owner": null,
+    "project_id": null,
+    "target_environment": null,
+    "isolation_status": "NO_SANDBOX",
+    "input_path": null,
+    "schema_baseline": {
+      "execution_id": "integer",
+      "pipeline_id": "integer",
+      "started_at": "timestamp",
+      "completed_at": "timestamp",
+      "status": "string"
+    },
+    "columns": [
+      { "name": "execution_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "pipeline_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "started_at", "type": "timestamp", "pii": false, "ai_suggested_rule": "Date Shift", "rule": "Date Shift", "override_allowed": true },
+      { "name": "completed_at", "type": "timestamp", "pii": false, "ai_suggested_rule": "Date Shift", "rule": "Date Shift", "override_allowed": true },
+      { "name": "status", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true }
+    ],
+    "row_count": 3800,
+    "created_at": "2026-06-21T10:00:00",
+    "updated_at": "2026-06-21T10:00:00"
+  },
+  "ds-007": {
+    "dataset_id": "ds-007",
+    "filename": "logs.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-003",
+    "database_name": "Integration Service DB",
+    "table_name": "logs",
+    "sandbox_id": null,
+    "sandbox_schema": null,
+    "sandbox_owner": null,
+    "project_id": null,
+    "target_environment": null,
+    "isolation_status": "NO_SANDBOX",
+    "input_path": null,
+    "schema_baseline": {
+      "log_id": "integer",
+      "execution_id": "integer",
+      "level": "string",
+      "message": "string",
+      "logged_at": "timestamp"
+    },
+    "columns": [
+      { "name": "log_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "execution_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "level", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "message", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "logged_at", "type": "timestamp", "pii": false, "ai_suggested_rule": "Date Shift", "rule": "Date Shift", "override_allowed": true }
+    ],
+    "row_count": 28000,
+    "created_at": "2026-06-21T10:00:00",
+    "updated_at": "2026-06-21T10:00:00"
+  },
+  "ds-008": {
+    "dataset_id": "ds-008",
+    "filename": "users.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-004",
+    "database_name": "Identity Service DB",
+    "table_name": "users",
+    "sandbox_id": null,
+    "sandbox_schema": null,
+    "sandbox_owner": null,
+    "project_id": null,
+    "target_environment": null,
+    "isolation_status": "NO_SANDBOX",
+    "input_path": null,
+    "schema_baseline": {
+      "user_id": "integer",
+      "username": "string",
+      "email": "string",
+      "role_id": "integer",
+      "created_at": "timestamp"
+    },
+    "columns": [
+      { "name": "user_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "username", "type": "string", "pii": true, "ai_suggested_rule": "Fake Value", "rule": "Fake Value", "override_allowed": true },
+      { "name": "email", "type": "string", "pii": true, "ai_suggested_rule": "Fake Value", "rule": "Fake Value", "override_allowed": true },
+      { "name": "role_id", "type": "integer", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "created_at", "type": "timestamp", "pii": false, "ai_suggested_rule": "Date Shift", "rule": "Date Shift", "override_allowed": true }
+    ],
+    "row_count": 320,
+    "created_at": "2026-06-19T08:00:00",
+    "updated_at": "2026-06-19T08:00:00"
+  },
+  "ds-009": {
+    "dataset_id": "ds-009",
+    "filename": "roles.csv",
+    "source_type": "Connected",
+    "connection_id": "conn-004",
+    "database_name": "Identity Service DB",
+    "table_name": "roles",
+    "sandbox_id": null,
+    "sandbox_schema": null,
+    "sandbox_owner": null,
+    "project_id": null,
+    "target_environment": null,
+    "isolation_status": "NO_SANDBOX",
+    "input_path": null,
+    "schema_baseline": {
+      "role_id": "integer",
+      "role_name": "string",
+      "permissions": "string"
+    },
+    "columns": [
+      { "name": "role_id", "type": "integer", "pii": false, "ai_suggested_rule": "Hash", "rule": "Hash", "override_allowed": true },
+      { "name": "role_name", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true },
+      { "name": "permissions", "type": "string", "pii": false, "ai_suggested_rule": "No Masking", "rule": "No Masking", "override_allowed": true }
+    ],
+    "row_count": 12,
+    "created_at": "2026-06-19T08:00:00",
+    "updated_at": "2026-06-19T08:00:00"
+  }
+}

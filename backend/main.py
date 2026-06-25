@@ -140,6 +140,19 @@ class DriftDetectRequest(BaseModel):
     sandbox_id: str
 
 
+class PipelineTableItem(BaseModel):
+    dataset_id: str
+    table_name: str
+    row_count: int = 100
+    columns: list[dict] = []
+    masking_rules: dict = {}
+
+
+class PipelineRunRequest(BaseModel):
+    tables: list[PipelineTableItem]
+    user_role: str = "developer"
+
+
 class DriftInboxApproveRequest(BaseModel):
     accepted_columns: list[str] = []
     new_column_rules: dict[str, str] = {}
@@ -1890,40 +1903,68 @@ def delete_sandbox_dataset(sandbox_id: str, dataset_id: str):
 
 DEMO_USERS = {
     "admin@tdm.com": {
+        "id": "usr-001",
         "password": "Admin@123",
         "name": "TDM Admin",
         "role": "admin",
+        "allowed_environments": ["DEV", "QA", "PROD"],
         "permissions": [
-            "dashboard",
-            "data_inventory",
-            "sandbox_manager",
-            "source_connections",
-            "data_classification",
-            "masking_rules",
-            "subsetting_rules",
-            "create_pipeline",
-            "existing_pipelines",
-            "job_monitor",
-            "data_preview",
-            "user_access",
-            "configuration",
-            "help",
+            "dashboard", "data_inventory", "sandbox_manager", "source_connections",
+            "data_classification", "masking_rules", "subsetting_rules",
+            "create_pipeline", "existing_pipelines", "job_monitor",
+            "data_preview", "user_access", "configuration", "help",
         ],
     },
     "developer@tdm.com": {
+        "id": "usr-002",
         "password": "Dev@123",
         "name": "TDM Developer",
         "role": "developer",
+        "allowed_environments": ["DEV"],
         "permissions": [
-            "dashboard",
-            "data_inventory",
-            "sandbox_manager",
-            "data_classification",
-            "masking_rules",
-            "create_pipeline",
-            "job_monitor",
-            "data_preview",
-            "help",
+            "dashboard", "data_inventory", "sandbox_manager",
+            "data_classification", "masking_rules",
+            "create_pipeline", "existing_pipelines", "job_monitor",
+            "data_preview", "help",
+        ],
+    },
+    "dev.priya@tdm.com": {
+        "id": "usr-003",
+        "password": "Priya@123",
+        "name": "Priya Shah",
+        "role": "developer",
+        "allowed_environments": ["DEV"],
+        "permissions": [
+            "dashboard", "data_inventory", "sandbox_manager",
+            "data_classification", "masking_rules",
+            "create_pipeline", "existing_pipelines", "job_monitor",
+            "data_preview", "help",
+        ],
+    },
+    "qa.alex@tdm.com": {
+        "id": "usr-004",
+        "password": "Alex@123",
+        "name": "Alex Chen",
+        "role": "qa",
+        "allowed_environments": ["DEV", "QA"],
+        "permissions": [
+            "dashboard", "data_inventory", "sandbox_manager",
+            "data_classification", "masking_rules",
+            "existing_pipelines", "job_monitor",
+            "data_preview", "help",
+        ],
+    },
+    "dev.maya@tdm.com": {
+        "id": "usr-005",
+        "password": "Maya@123",
+        "name": "Maya Patel",
+        "role": "developer",
+        "allowed_environments": ["DEV"],
+        "permissions": [
+            "dashboard", "data_inventory", "sandbox_manager",
+            "data_classification", "masking_rules",
+            "create_pipeline", "existing_pipelines", "job_monitor",
+            "data_preview", "help",
         ],
     },
 }
@@ -2086,9 +2127,11 @@ def login(request: LoginRequest):
         "status": "SUCCESS",
         "message": "Login successful.",
         "user": {
+            "id": user.get("id"),
             "email": request.email,
             "name": user["name"],
             "role": user["role"],
+            "allowed_environments": user.get("allowed_environments", ["DEV"]),
             "permissions": user["permissions"],
         },
     }
@@ -2653,6 +2696,130 @@ def run_multiple_jobs(request: RunMultipleJobsRequest):
         "rows_processed": total_rows_processed,
         "columns_masked": total_columns_masked,
     }
+
+@app.post("/pipeline/run")
+def run_pipeline(request: PipelineRunRequest):
+    if not request.tables:
+        return {"status": "FAILED", "message": "No tables selected for pipeline run."}
+
+    job_started_at = datetime.now()
+    child_jobs = []
+    output_files = []
+    total_rows_processed = 0
+    total_columns_masked = 0
+    combined_before_preview = []
+    combined_after_preview = []
+    primary_job_id = str(uuid.uuid4())
+
+    for table in request.tables:
+        dataset_id = table.dataset_id
+        table_name = table.table_name
+        row_count = max(1, min(table.row_count, 500))
+        col_defs = table.columns or []
+        col_names = [c["name"] if isinstance(c, dict) else str(c) for c in col_defs]
+        if not col_names:
+            col_names = ["id", "name", "value"]
+
+        rows = [{col: generate_value_for_column(col, i) for col in col_names} for i in range(row_count)]
+        df = pd.DataFrame(rows, columns=col_names)
+
+        safe_name = re.sub(r"[^a-zA-Z0-9_]", "_", table_name)
+        filename = f"{safe_name}.csv"
+        input_path = os.path.join(GENERATED_DIR, f"{dataset_id}_{filename}")
+        output_path = os.path.join(OUTPUT_DIR, f"masked_{dataset_id}_{filename}")
+        df.to_csv(input_path, index=False)
+
+        detected_columns = detect_columns_from_csv(input_path)
+
+        datasets[dataset_id] = {
+            "dataset_id": dataset_id,
+            "filename": filename,
+            "table_name": table_name,
+            "input_path": input_path,
+            "output_path": output_path,
+            "columns": detected_columns,
+            "source_type": "pipeline",
+            "sandbox_id": f"pipeline-sandbox-{dataset_id}",
+            "sandbox_schema": "pipeline",
+            "row_count": row_count,
+        }
+
+        final_masking_rules, enforced_rules = apply_admin_locked_rules(
+            datasets[dataset_id],
+            table.masking_rules,
+            request.user_role,
+        )
+
+        preview, audit = run_local_anonymization(input_path, output_path, final_masking_rules)
+
+        rows_done = audit.get("total_rows_processed", row_count)
+        cols_masked = audit.get("pii_columns_masked", 0)
+        total_rows_processed += rows_done
+        total_columns_masked += cols_masked
+
+        for row in (preview.get("before") or []):
+            combined_before_preview.append({"_table": table_name, **row})
+        for row in (preview.get("after") or []):
+            combined_after_preview.append({"_table": table_name, **row})
+
+        output_files.append(output_path)
+        child_jobs.append({
+            "dataset_id": dataset_id,
+            "dataset_name": filename,
+            "table_name": table_name,
+            "source_type": "pipeline",
+            "rows_processed": rows_done,
+            "columns_masked": cols_masked,
+            "output_target": output_path,
+            "admin_locked_rules_enforced": enforced_rules,
+        })
+
+    job_ended_at = datetime.now()
+    duration_seconds = round((job_ended_at - job_started_at).total_seconds(), 2)
+
+    jobs[primary_job_id] = {
+        "job_id": primary_job_id,
+        "dataset_id": "PIPELINE_RUN",
+        "dataset_name": f"{len(child_jobs)} table(s)",
+        "source_type": "pipeline",
+        "user_role": request.user_role,
+        "status": "COMPLETED",
+        "created_at": job_started_at.isoformat(),
+        "job_started_at": job_started_at.isoformat(),
+        "job_ended_at": job_ended_at.isoformat(),
+        "duration_seconds": duration_seconds,
+        "rows_processed": total_rows_processed,
+        "tables_processed": len(child_jobs),
+        "columns_masked": total_columns_masked,
+        "execution_mode": "Pipeline batch run",
+        "output_target": "PIPELINE_OUTPUT",
+        "output_files": output_files,
+        "child_jobs": child_jobs,
+        "preview": {
+            "before": combined_before_preview[:20],
+            "after": combined_after_preview[:20],
+        },
+        "audit": {
+            "total_rows_processed": total_rows_processed,
+            "tables_processed": len(child_jobs),
+            "pii_columns_masked": total_columns_masked,
+            "execution_mode": "Pipeline batch run",
+            "run_status": "Success",
+            "child_jobs": child_jobs,
+        },
+    }
+
+    return {
+        "status": "COMPLETED",
+        "message": "Pipeline run completed successfully",
+        "job_id": primary_job_id,
+        "tables_processed": len(child_jobs),
+        "rows_processed": total_rows_processed,
+        "columns_masked": total_columns_masked,
+        "execution_mode": "Pipeline batch run",
+        "job_started_at": job_started_at.isoformat(),
+    }
+
 
 @app.get("/jobs/{job_id}/status")
 def get_job_status(job_id: str):

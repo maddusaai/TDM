@@ -1,0 +1,51 @@
+employee_id,employee_name,email,phone_number,ssn,department,job_title,hire_date,employment_status,salary
+EMP3001,Hayden Robinson,knightkeith@williams.com,628.506.8332,158-71-6165,HR,Tree surgeon,2022-05-20,On Leave,129042
+EMP3002,Lisa Mcpherson,rodriguezteresa@white.com,(475)215-2179x48077,408-17-2685,Finance,"Conservator, museum/gallery",2014-11-04,Terminated,171376
+EMP3003,Stephanie Moody,jmueller@lyons-coleman.com,+1-278-670-7375x31503,586-29-8771,HR,Animal technologist,2024-10-06,Terminated,167475
+EMP3004,Daniel Romero,mercerjody@peterson.com,(459)572-8409,811-58-3798,Finance,"Engineer, control and instrumentation",2023-10-01,Active,173964
+EMP3005,Kenneth Guzman,ericaball@gillespie-robinson.com,492.430.1902,045-80-6110,Operations,"Surveyor, commercial/residential",2019-01-04,Terminated,77878
+EMP3006,Linda Mckinney,tracy32@bradley.com,626-961-4572x045,232-84-8338,Finance,Associate Professor,2015-05-19,Active,81457
+EMP3007,Lindsay Kennedy,ashley02@long.biz,(920)469-8741x7979,140-98-7582,HR,Quarry manager,2023-09-12,On Leave,52811
+EMP3008,Danielle Flores,zjohnson@ayala-lee.com,+1-594-764-6888,118-18-3293,Operations,"Teacher, primary school",2023-03-21,Terminated,148616
+EMP3009,Andrea Gamble MD,paul29@montgomery.net,(831)748-9059,313-86-0777,Finance,Youth worker,2014-10-05,Active,123124
+EMP3010,Elizabeth Welch,jonathanjohnson@medina-walker.net,001-300-296-6730x8624,363-39-7832,IT,Pensions consultant,2024-03-27,Terminated,78736
+EMP3011,Andrea Stephens,ericabright@davis.com,(733)944-7251x571,172-04-9760,Data Engineering,Maintenance engineer,2017-08-18,On Leave,118645
+EMP3012,Glenn Gilmore,keithedward@strickland.com,8708005974,326-14-5874,Finance,Hydrologist,2019-05-06,Active,129604
+EMP3013,Kimberly Wilson,fjohnson@dominguez-fletcher.com,8119125385,148-05-4690,HR,"Designer, textile",2020-04-04,On Leave,172316
+EMP3014,Julie Parsons,rcarpenter@boyer.com,(338)293-2900,400-59-2233,HR,Materials engineer,2015-10-19,Active,74042
+EMP3015,John Brown,tammystewart@camacho-potter.com,+1-355-966-6324x106,868-27-5602,Sales,Housing manager/officer,2017-02-13,On Leave,103651
+EMP3016,Nicole Moss,sheltonjeremy@olson.com,348.801.0523x2437,104-75-2399,Sales,Market researcher,2016-07-10,Terminated,77237
+EMP3017,Ashley Ruiz,cvelasquez@cantrell.com,5218976123,078-35-1326,IT,"Accountant, chartered management",2022-01-12,Terminated,141782
+EMP3018,Rachel Graves,qjackson@henry.org,(536)943-2284,382-25-8922,Operations,Surgeon,2019-06-25,Active,121984
+EMP3019,Rebecca Hansen,jeremygilmore@cook.com,(277)218-2261x04672,534-28-0474,HR,Chief Technology Officer,2024-10-01,On Leave,118585
+EMP3020,Benjamin Henderson,bwilliams@grant.net,(594)569-3969,556-13-1317,Finance,Hospital pharmacist,2025-03-29,On Leave,111263
+EMP3021,Michael Moore,danielprice@harris.com,(607)448-0790x37818,540-52-2210,Data Engineering,Fitness centre manager,2026-02-10,On Leave,50975
+EMP3022,Brittany Chan,christinamoran@pittman.com,783-424-4124x9362,893-59-8351,Data Engineering,Call centre manager,2024-05-29,Active,56411
+EMP3023,Stephanie Brown,matthewgoodman@johnson-gutierrez.com,867.516.4433,590-97-7508,Operations,Archaeologist,2018-08-26,On Leave,58171
+EMP3024,Douglas Sanders,christopherbeck@peck.com,+1-314-535-1464,754-86-4508,Data Engineering,Production engineer,2026-04-23,Active,141016
+EMP3025,Crystal Young,smithangela@schroeder-palmer.com,444-986-6415,483-75-4416,Finance,IT consultant,2020-01-15,Active,165186
+EMP3026,Garrett Parker,xgarcia@russell.com,+1-268-292-6323x3200,145-96-6407,Operations,"Therapist, sports",2024-01-19,Terminated,69186
+EMP3027,Janet Hart,pattondavid@clark.com,(548)423-4688x266,584-73-1170,IT,Gaffer,2023-05-04,On Leave,93207
+EMP3028,Maurice Johnson,mortonnathan@colon.net,381-645-1008,552-18-1135,IT,Podiatrist,2020-12-05,On Leave,163265
+EMP3029,Ryan Moyer,pittsjohnny@miller-perkins.com,724.283.9653,419-35-8097,IT,Hydrographic surveyor,2021-09-12,On Leave,58078
+EMP3030,Matthew Jordan,wacosta@franco.org,(626)492-4530x9091,461-23-0268,Operations,Video editor,2022-04-01,On Leave,87514
+EMP3031,Philip Martinez,holmesjason@west.com,001-831-807-2118x6183,406-32-2481,Finance,"Engineer, agricultural",2016-07-13,Active,58953
+EMP3032,Jeffery Watson,akrueger@kelley.com,001-734-852-1104x2346,190-78-0818,HR,Audiological scientist,2025-07-26,On Leave,149925
+EMP3033,Jessica Dalton,elane@rogers.org,5484139785,133-07-7555,Finance,"Designer, multimedia",2020-01-24,On Leave,150478
+EMP3034,Joshua Mitchell,wendy16@lara-sanders.com,001-649-756-2953x99916,465-28-0408,IT,Paramedic,2025-12-19,On Leave,66732
+EMP3035,Russell Walsh DDS,whitechristina@harmon.net,464.542.9721,537-63-2171,Operations,"Therapist, speech and language",2017-10-24,Terminated,52563
+EMP3036,Heidi Carter,samantha00@griffith.com,781-746-9330x987,162-21-9608,IT,Advertising copywriter,2021-09-01,Terminated,154310
+EMP3037,Stephen James,mccoyjamie@moore.org,243.882.3164,312-35-2189,Data Engineering,Surgeon,2018-01-31,Active,110403
+EMP3038,Jared Holloway,amber75@thompson.com,(898)561-0077x64556,326-06-4440,Operations,Television production assistant,2019-01-24,Active,108856
+EMP3039,Joshua Shaffer,laurenthompson@thornton.com,(460)802-7310x1600,406-45-3359,Data Engineering,Geophysical data processor,2023-09-02,Active,75324
+EMP3040,Jill Saunders,carolconway@rodriguez.biz,(228)675-5071,631-37-1560,Data Engineering,Medical sales representative,2022-11-11,On Leave,66183
+EMP3041,John Simon,anthonymunoz@cole-brown.org,(411)392-0021x32673,846-51-1688,Operations,Estate agent,2015-07-12,On Leave,114473
+EMP3042,Charles Bailey,gregoryjimenez@jones.com,(328)432-9879,337-03-8135,Finance,"Production assistant, television",2019-07-02,Active,170361
+EMP3043,Wendy Klein,kristen21@adams.info,657-564-0059,883-28-7418,Operations,"Designer, multimedia",2020-10-23,Terminated,175616
+EMP3044,Daniel Clark,shawnahardy@simpson.biz,(934)855-4307x0705,304-91-9560,Finance,Immigration officer,2016-02-10,Terminated,176380
+EMP3045,Jordan Perez,thanna@george.org,001-378-968-1142x92642,566-47-2359,IT,"Doctor, hospital",2026-01-23,Active,174015
+EMP3046,Brian Price,freemannathan@lowe-harris.com,4868595387,143-58-6651,Sales,Music therapist,2021-09-24,Active,61753
+EMP3047,Patrick Young,lindaharris@rice.net,693.275.5393x96563,407-40-0180,Finance,Risk manager,2019-10-06,On Leave,112977
+EMP3048,Charles Bautista,qparker@mcclure.info,382-435-8881,613-81-6613,Finance,Insurance underwriter,2016-06-18,Active,89917
+EMP3049,Jared Henry,williamskeith@friedman.com,(850)417-4014,567-60-4030,Sales,Jewellery designer,2015-03-27,Active,77357
+EMP3050,Jennifer Jones,browneric@fisher-hernandez.biz,+1-520-546-1779,765-72-3422,Sales,Therapeutic radiographer,2014-06-26,Terminated,93798

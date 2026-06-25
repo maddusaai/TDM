@@ -21,13 +21,6 @@ import ExistingPipelinesPage from './ExistingPipelinesPage';
 import MaskedAssetsPage from './MaskedAssetsPage';
 import JobHistoryPage from './JobHistoryPage';
 
-const ENV_BADGE = {
-  PROD: 'bg-red-100 text-red-700',
-  UAT: 'bg-yellow-100 text-yellow-700',
-  QA: 'bg-blue-100 text-blue-700',
-  DEV: 'bg-green-100 text-green-700',
-};
-
 const STATUS_BADGE = {
   Ready: 'bg-emerald-50 text-emerald-700',
   Draft: 'bg-slate-100 text-slate-600',
@@ -504,11 +497,16 @@ function OverviewTab({ workspace }) {
 }
 
 function MembersTab({ workspace }) {
-  const members = [
-    { name: workspace.owner, email: `${workspace.owner.toLowerCase().replace(' ', '.')}@org.com`, role: 'workspace_owner', joined: '2026-01-10' },
-    { name: 'Dev User', email: 'developer@tdm.com', role: 'developer', joined: '2026-02-15' },
-    { name: 'Viewer One', email: 'viewer@org.com', role: 'viewer', joined: '2026-03-20' },
-  ];
+  const members = workspace.members?.length
+    ? workspace.members.map((m) => ({
+        name: m.name || m.email,
+        email: m.email,
+        role: m.role || 'developer',
+        joined: m.joined_at || workspace.date || '—',
+      }))
+    : [
+        { name: workspace.owner || workspace.createdBy || 'Admin User', email: '', role: 'workspace_owner', joined: workspace.date || '—' },
+      ];
   const ROLE_BADGE = {
     workspace_owner: 'bg-indigo-50 text-indigo-700',
     developer: 'bg-green-50 text-green-700',
@@ -599,10 +597,8 @@ function ConnectorTablePreview({ tableData }) {
 }
 
 function ConnectorsTab({ workspace }) {
-  const { connectors } = useConnectors();
-  const wsConnectors = workspace.connectors?.length
-    ? connectors.filter((c) => workspace.connectors.includes(c.name))
-    : connectors;
+  const { getConnectorsForWorkspace } = useConnectors();
+  const wsConnectors = getConnectorsForWorkspace(workspace);
   return (
     <Card className="rounded-2xl">
       <CardContent className="p-6">
@@ -646,8 +642,13 @@ function ConnectorsTab({ workspace }) {
 }
 
 function PipelinesTab({ workspace }) {
-
-  const pipelines = blueprintPipelines.filter((p) => p.workspace === workspace.name);
+  const sessionPipelines = (() => {
+    try { return JSON.parse(sessionStorage.getItem('tdm_pipelines') || '[]'); } catch { return []; }
+  })();
+  const allPipelines = [...blueprintPipelines, ...sessionPipelines.filter((sp) => !blueprintPipelines.some((bp) => bp.name === sp.name))];
+  const pipelines = allPipelines.filter(
+    (p) => p.workspace === workspace.name || p.workspace_id === workspace.id
+  );
   return (
     <Card className="rounded-2xl">
       <CardContent className="p-6">
@@ -792,8 +793,10 @@ export default function WorkspaceDetailPage() {
   const workspace = blueprintWs || (sandboxMatch ? {
     name: `${sandboxMatch.project_id} — ${sandboxMatch.target_environment}`,
     description: sandboxMatch.sandbox_schema,
-    environment: sandboxMatch.target_environment,
+    status: 'Active',
     owner: sandboxMatch.owner,
+    members: [],
+    connector_ids: [],
     domains: [],
   } : null);
 
@@ -835,10 +838,13 @@ export default function WorkspaceDetailPage() {
             <h1 className="text-xl font-bold text-slate-900">{workspace.name}</h1>
             <p className="text-sm text-slate-500 mt-1">{workspace.description}</p>
             <div className="flex items-center gap-2 mt-2">
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${ENV_BADGE[workspace.environment] || 'bg-slate-100 text-slate-600'}`}>
-                {workspace.environment}
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${workspace.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : workspace.status === 'Archived' ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-700'}`}>
+                {workspace.status || 'Active'}
               </span>
-              <span className="text-xs text-slate-400">Owner: {workspace.owner}</span>
+              <span className="text-xs text-slate-400">Owner: {workspace.owner || workspace.createdBy}</span>
+              {workspace.members?.length > 0 && (
+                <span className="text-xs text-slate-400">· {workspace.members.length} member{workspace.members.length !== 1 ? 's' : ''}</span>
+              )}
             </div>
           </div>
         </div>
