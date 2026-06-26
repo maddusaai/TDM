@@ -98,8 +98,11 @@ function AppRoutes() {
           <Route path="workspaces/:wsId/members" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/connectors" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/data-inventory" element={<WorkspaceDetailPage />} />
+          <Route path="workspaces/:wsId/data-assets" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/data-classification" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/masking-rules" element={<WorkspaceDetailPage />} />
+          <Route path="workspaces/:wsId/create-pipeline" element={<WorkspaceDetailPage />} />
+          <Route path="workspaces/:wsId/subsetting" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/pipelines" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/masked-assets" element={<WorkspaceDetailPage />} />
           <Route path="workspaces/:wsId/jobs" element={<WorkspaceDetailPage />} />
@@ -137,8 +140,11 @@ function AppRoutes() {
           <Route path=":wsId/members" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/connectors" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/data-inventory" element={<WorkspaceDetailPage />} />
+          <Route path=":wsId/data-assets" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/data-classification" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/masking-rules" element={<WorkspaceDetailPage />} />
+          <Route path=":wsId/create-pipeline" element={<WorkspaceDetailPage />} />
+          <Route path=":wsId/subsetting" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/pipelines" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/masked-assets" element={<WorkspaceDetailPage />} />
           <Route path=":wsId/jobs" element={<WorkspaceDetailPage />} />

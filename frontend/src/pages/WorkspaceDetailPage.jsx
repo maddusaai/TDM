@@ -4,11 +4,11 @@ import axios from 'axios';
 import {
   Briefcase, Users, Network, Play, Clock, Shield,
   ChevronRight, ArrowLeft, CheckCircle2, AlertCircle,
-  Database, FileText, Activity, History, Search,
+  Database, FileText, Activity, History, Search, Filter,
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { blueprintPipelines, maskedAssetSamples, connectorTableData } from '../lib/constants';
+import { blueprintPipelines, maskedAssetSamples, connectorTableData, sampleColumns } from '../lib/constants';
 import { useConnectors } from '../context/ConnectorsContext';
 import { useWorkspaces } from '../context/WorkspacesContext';
 import { useAuth } from '../context/AuthContext';
@@ -34,14 +34,15 @@ const TABS = [
   { label: 'Members',           tab: 'members' },
   { label: 'Connectors',        tab: 'connectors' },
   { label: 'Data Inventory',    tab: 'data-inventory' },
-  { label: 'Classification',    tab: 'data-classification' },
+  { label: 'Data Assets',       tab: 'data-assets' },
   { label: 'Masking Rules',     tab: 'masking-rules' },
-  { label: 'Create Pipeline',   tab: 'create-pipeline' },
+  { label: 'Subsetting',        tab: 'subsetting' },
   { label: 'Pipelines',         tab: 'pipelines' },
   { label: 'Masked Assets',     tab: 'masked-assets' },
   { label: 'Jobs',              tab: 'jobs' },
   { label: 'Job History',       tab: 'job-history' },
   { label: 'Schema Versions',   tab: 'schema-versions' },
+  { label: 'Legacy Classification', tab: 'data-classification' },
 ];
 
 const MASKING_RULES = ['No Masking', 'Hash', 'Fake Value', 'Partial Masking', 'Date Shift'];
@@ -775,6 +776,139 @@ function MaskingRulesTab() {
   );
 }
 
+function SubsettingTab({ workspace }) {
+  const storageKey = `tdm_subsetting_${workspace?.id || workspace?.name || 'workspace'}`;
+  const defaultConfig = {
+    enabled: false,
+    rowLimit: 1000,
+    samplePercent: 100,
+    includeColumns: [],
+  };
+
+  const [config, setConfig] = useState(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
+      return { ...defaultConfig, ...(saved || {}) };
+    } catch {
+      return defaultConfig;
+    }
+  });
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    sessionStorage.setItem(storageKey, JSON.stringify(config));
+  }, [config, storageKey]);
+
+  const toggleColumn = (name) => {
+    setConfig((prev) => ({
+      ...prev,
+      includeColumns: prev.includeColumns?.includes(name)
+        ? prev.includeColumns.filter((col) => col !== name)
+        : [...(prev.includeColumns || []), name],
+    }));
+  };
+
+  return (
+    <div className="space-y-5">
+      <Card className="rounded-2xl">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Workspace subsetting</h3>
+              <p className="mt-1 text-[13px] text-slate-500">Define row and column limits for this workspace before a pipeline run is started.</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[12px] font-medium text-indigo-700">
+              <Filter size={13} />
+              {config.enabled ? 'Enabled' : 'Off'}
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <label className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-800">Apply subsetting to runs</p>
+                  <p className="mt-1 text-[12px] text-slate-500">Limit the amount of data used in this workspace’s masking jobs.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.enabled}
+                  onChange={(e) => setConfig((prev) => ({ ...prev, enabled: e.target.checked }))}
+                  className="mt-1 h-4 w-4 accent-indigo-600"
+                />
+              </label>
+
+              {config.enabled && (
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[11px] font-medium text-slate-600">Max rows</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={config.rowLimit}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, rowLimit: Number(e.target.value) || 1 }))}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] font-medium text-slate-600">Sample %</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={config.samplePercent}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, samplePercent: Number(e.target.value) }))}
+                      className="w-full accent-indigo-600"
+                    />
+                    <p className="mt-1 text-[12px] text-slate-500">{config.samplePercent}% of rows</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-600">Included columns</label>
+                    <div className="flex flex-wrap gap-2">
+                      {sampleColumns.map((col) => {
+                        const active = config.includeColumns?.includes(col.name);
+                        return (
+                          <button
+                            key={col.name}
+                            type="button"
+                            onClick={() => toggleColumn(col.name)}
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${active ? 'border-indigo-200 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
+                          >
+                            {col.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-[11px] text-slate-400">Leave this empty to keep the full schema in the run.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h4 className="text-[13px] font-semibold text-slate-800">How it will apply</h4>
+              <ul className="mt-3 space-y-2 text-[12px] text-slate-600">
+                <li>• Limit preview rows to {config.rowLimit} before execution.</li>
+                <li>• Sample {config.samplePercent}% of rows for the current workspace run.</li>
+                <li>• Restrict the pipeline to {config.includeColumns?.length ? config.includeColumns.join(', ') : 'all available columns'}.</li>
+              </ul>
+              <Button
+                className="mt-5 rounded-xl"
+                onClick={() => {
+                  setSaved(true);
+                  window.setTimeout(() => setSaved(false), 1400);
+                }}
+              >
+                {saved ? 'Saved' : 'Save preset'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function WorkspaceDetailPage() {
   const { wsId, tab = '' } = useParams();
   const navigate = useNavigate();
@@ -848,7 +982,6 @@ export default function WorkspaceDetailPage() {
             </div>
           </div>
         </div>
-        <Button className="rounded-xl">Run Pipeline</Button>
       </div>
 
 
@@ -858,10 +991,10 @@ export default function WorkspaceDetailPage() {
       {activeTab.tab === 'members' && <MembersTab workspace={workspace} />}
       {activeTab.tab === 'connectors' && <ConnectorsTab workspace={workspace} />}
       {activeTab.tab === 'data-inventory' && <DataInventoryPage />}
-      {activeTab.tab === 'data-classification' && <DataClassificationPage />}
+      {(activeTab.tab === 'data-assets' || activeTab.tab === 'data-classification') && <DataClassificationPage />}
       {activeTab.tab === 'masking-rules' && <MaskingRulesTab />}
-      {activeTab.tab === 'create-pipeline' && <CreatePipelinePage />}
-      {activeTab.tab === 'pipelines' && <PipelinesTab workspace={workspace} />}
+      {activeTab.tab === 'subsetting' && <SubsettingTab workspace={workspace} />}
+      {activeTab.tab === 'pipelines' && <ExistingPipelinesPage />}
       {activeTab.tab === 'masked-assets' && <MaskedAssetsPage />}
       {activeTab.tab === 'jobs' && <JobsTab workspace={workspace} />}
       {activeTab.tab === 'job-history' && <JobHistoryPage />}

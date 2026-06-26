@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Network, Play, Shield, Upload,
-  Tag, List, Eye, Clock, GitBranch,
+  Tag, List, Eye, Clock, GitBranch, Filter,
 } from 'lucide-react';
 
 export const API_BASE_URL = 'http://127.0.0.1:8000';
@@ -21,8 +21,9 @@ export const WS_NAV = [
   { icon: Users,           label: 'Members',         tab: 'members' },
   { icon: Network,         label: 'Connectors',      tab: 'connectors' },
   { icon: Upload,          label: 'Data Inventory',  tab: 'data-inventory' },
-  { icon: Tag,             label: 'Classification',  tab: 'data-classification' },
+  { icon: Tag,             label: 'Data Assets',     tab: 'data-assets' },
   { icon: Shield,          label: 'Masking Rules',   tab: 'masking-rules' },
+  { icon: Filter,          label: 'Subsetting',      tab: 'subsetting' },
   { icon: List,            label: 'Pipelines',       tab: 'pipelines' },
   { icon: Eye,             label: 'Masked Assets',   tab: 'masked-assets' },
   { icon: Clock,           label: 'Jobs',            tab: 'jobs' },

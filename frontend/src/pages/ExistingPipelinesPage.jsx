@@ -123,7 +123,6 @@ function SourceStep({ onNext, onMultipleDatasetsGenerated }) {
 
   const [selectedDb, setSelectedDb] = useState(null);
   const [selectedTables, setSelectedTables] = useState([]);
-  const [rowCountByTable, setRowCountByTable] = useState({});
 
   const [showAddConn, setShowAddConn] = useState(false);
   const [newConnName, setNewConnName] = useState('');
@@ -136,14 +135,12 @@ function SourceStep({ onNext, onMultipleDatasetsGenerated }) {
   const handleDbSelect = (db) => {
     setSelectedDb(db);
     setSelectedTables([]);
-    setRowCountByTable({});
   };
 
   const toggleTable = (tableName) => {
     setSelectedTables((prev) =>
       prev.includes(tableName) ? prev.filter((t) => t !== tableName) : [...prev, tableName]
     );
-    setRowCountByTable((prev) => ({ ...prev, [tableName]: prev[tableName] || 100 }));
   };
 
   const handleAddConnection = () => {
@@ -179,7 +176,7 @@ function SourceStep({ onNext, onMultipleDatasetsGenerated }) {
         source_database: selectedDb?.name,
         source_connector_id: selectedDb?.connectorId || selectedDb?.connectionId,
 
-        row_count: rowCountByTable[tableName] || tableData?.row_count || 100,
+        row_count: tableData?.row_count || 100,
         columns: tableData?.columns || [],
       };
     });
@@ -291,17 +288,6 @@ function SourceStep({ onNext, onMultipleDatasetsGenerated }) {
                       <p className="text-[13px] font-medium text-slate-900">{table.name}</p>
                       <p className="text-[11px] text-slate-500">{table.columnCount} columns · {table.row_count?.toLocaleString()} rows</p>
                     </div>
-                    {isSelected && (
-                      <div className="flex items-center gap-2">
-                        <label className="text-[11px] text-slate-500">Rows to generate</label>
-                        <input
-                          type="number" min="1" max="10000"
-                          value={rowCountByTable[table.name] || table.row_count || 100}
-                          onChange={(e) => setRowCountByTable((prev) => ({ ...prev, [table.name]: Number(e.target.value) }))}
-                          className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] outline-none"
-                        />
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -574,7 +560,7 @@ function PreRunValidationAgentCard({ validation, loading, error, onValidate }) {
   );
 }
 
-function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedDatasets, pipelineName, pipelineId, workspaceId, isPipelineRun = false }) {
+function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedDatasets, pipelineName, pipelineId, workspaceId, isPipelineRun = false, subsettingConfig, onSubsettingChange }) {
   const { addJob } = useJobs();
   const [running, setRunning] = useState(false);
   const [complete, setComplete] = useState(false);
@@ -634,6 +620,7 @@ function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedData
           masking_rules: maskingRules?.[d.dataset_id] || {},
         })),
         user_role: currentUser?.role || 'developer',
+        subsetting: subsettingConfig || { enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] },
       });
 
       if (runResponse.data.status === 'FAILED') { setRunning(false); setError(runResponse.data.message || 'Pipeline run failed.'); return; }
@@ -685,6 +672,7 @@ function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedData
         runResponse = await axios.post(`${API_BASE_URL}/jobs/run-multiple`, {
           datasets: selectedDatasetList.map((d) => ({ dataset_id: d.dataset_id, masking_rules: maskingRules?.[d.dataset_id] || {} })),
           user_role: currentUser?.role || 'developer',
+          subsetting: subsettingConfig || { enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] },
         });
       } else {
         const d = selectedDatasetList[0];
@@ -692,6 +680,7 @@ function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedData
           dataset_id: d.dataset_id,
           masking_rules: maskingRules?.[d.dataset_id] || maskingRules,
           user_role: currentUser?.role || 'developer',
+          subsetting: subsettingConfig || { enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] },
         });
       }
 
@@ -739,6 +728,7 @@ function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedData
       ) : (
         <PreRunValidationAgentCard validation={validationResult} loading={validationLoading} error={validationError} onValidate={validatePreRun} />
       )}
+      <SubsettingPanel value={subsettingConfig} onChange={onSubsettingChange} />
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="rounded-2xl shadow-sm lg:col-span-2">
           <CardContent className="p-6">
@@ -954,8 +944,9 @@ function PipelineWizard({ currentUser, onDone }) {
   const [currentJobId, setCurrentJobId] = useState(null);
   const [maskingRules, setMaskingRules] = useState({});
   const [selectedDatasets, setSelectedDatasets] = useState([]);
+  const [subsettingConfig, setSubsettingConfig] = useState({ enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] });
 
-  const reset = () => { setActiveStep(1); setCurrentJobId(null); setMaskingRules({}); setSelectedDatasets([]); setPipelineName(''); setWorkspaceName(''); };
+  const reset = () => { setActiveStep(1); setCurrentJobId(null); setMaskingRules({}); setSelectedDatasets([]); setSubsettingConfig({ enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] }); setPipelineName(''); setWorkspaceName(''); };
 
   return (
     <div className="space-y-6">
@@ -1038,6 +1029,8 @@ function PipelineWizard({ currentUser, onDone }) {
               pipelineName={pipelineName}
               workspaceId={workspaceId}
               isPipelineRun={true}
+              subsettingConfig={subsettingConfig}
+              onSubsettingChange={setSubsettingConfig}
               onJobCreated={(jobId) => setCurrentJobId(jobId)}
               onNext={() => setActiveStep(4)}
             />
@@ -1083,6 +1076,84 @@ const SIMULATED_DRIFT = {
   removed: ['contact_number'],
 };
 
+function SubsettingPanel({ value, onChange }) {
+  const config = value || { enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] };
+
+  const toggleColumn = (name) => {
+    onChange({
+      ...config,
+      includeColumns: config.includeColumns?.includes(name)
+        ? config.includeColumns.filter((col) => col !== name)
+        : [...(config.includeColumns || []), name],
+    });
+  };
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[13px] font-semibold text-slate-800">Subsetting</p>
+          <p className="mt-1 text-[12px] text-slate-500">Limit rows and columns for this rerun.</p>
+        </div>
+        <label className="flex items-center gap-2 text-[12px] text-slate-600">
+          <input
+            type="checkbox"
+            checked={config.enabled}
+            onChange={(e) => onChange({ ...config, enabled: e.target.checked })}
+            className="accent-indigo-600"
+          />
+          Enable
+        </label>
+      </div>
+
+      {config.enabled && (
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-[11px] font-medium text-slate-600">Max rows</label>
+            <input
+              type="number"
+              min="1"
+              value={config.rowLimit}
+              onChange={(e) => onChange({ ...config, rowLimit: Number(e.target.value) || 1 })}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] font-medium text-slate-600">Sample %</label>
+            <input
+              type="range"
+              min="1"
+              max="100"
+              value={config.samplePercent}
+              onChange={(e) => onChange({ ...config, samplePercent: Number(e.target.value) })}
+              className="w-full accent-indigo-600"
+            />
+            <p className="mt-1 text-[12px] text-slate-500">{config.samplePercent}% of rows</p>
+          </div>
+          <div className="md:col-span-2">
+            <label className="mb-1 block text-[11px] font-medium text-slate-600">Included columns</label>
+            <div className="flex flex-wrap gap-2">
+              {sampleColumns.map((col) => {
+                const active = config.includeColumns?.includes(col.name);
+                return (
+                  <button
+                    key={col.name}
+                    type="button"
+                    onClick={() => toggleColumn(col.name)}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${active ? 'border-indigo-200 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
+                  >
+                    {col.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RunJobModal({ pipeline, onClose, onConfirmRun }) {
   const navigate = useNavigate();
   const { connectors } = useConnectors();
@@ -1090,6 +1161,7 @@ function RunJobModal({ pipeline, onClose, onConfirmRun }) {
   const [step, setStep] = useState('initial'); // initial | drift-detected | continue-warning | switch-version
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState(null);
+  const [subsettingConfig, setSubsettingConfig] = useState({ enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] });
 
   const handleDriftToggle = (checked) => {
     setShowDrift(checked);
@@ -1100,7 +1172,7 @@ function RunJobModal({ pipeline, onClose, onConfirmRun }) {
     setRunning(true);
     setRunError(null);
     try {
-      await onConfirmRun(pipeline);
+      await onConfirmRun(pipeline, subsettingConfig);
       onClose();
     } catch (err) {
       setRunError(err?.message || 'Failed to start job. Check backend connection.');
@@ -1157,6 +1229,8 @@ function RunJobModal({ pipeline, onClose, onConfirmRun }) {
               </div>
             ))}
           </div>
+
+          {step === 'initial' && <SubsettingPanel value={subsettingConfig} onChange={setSubsettingConfig} />}
 
           {/* Schema drift checkbox — only on initial */}
           {step === 'initial' && (
@@ -1312,8 +1386,8 @@ function PipelineDetailView({ pipeline, onBack, onEdit, onRunNew, onDuplicate, o
     setEditing(false);
   };
 
-  const handleConfirmRun = async (p) => {
-    await onRunNew(p);
+  const handleConfirmRun = async (p, subsetting) => {
+    await onRunNew(p, subsetting);
     setRunMsg({ type: 'success', text: 'New job started successfully.' });
   };
 
@@ -1578,7 +1652,7 @@ export default function PipelinesPage() {
     setViewingPipeline(copy);
   };
 
-  const handleRunNew = async (pipeline) => {
+  const handleRunNew = async (pipeline, subsettingConfig = { enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] }) => {
     const tables = pipeline.tables || [];
     if (tables.length === 0) throw new Error('No tables configured on this pipeline.');
 
@@ -1593,6 +1667,7 @@ export default function PipelinesPage() {
     const res = await axios.post(`${API_BASE_URL}/pipeline/run`, {
       tables: tableItems,
       user_role: currentUser?.role || 'developer',
+      subsetting: subsettingConfig || { enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] },
     });
 
     if (res.data.status === 'FAILED') throw new Error(res.data.message || 'Run failed.');
