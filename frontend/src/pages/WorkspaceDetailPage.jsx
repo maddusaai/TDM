@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import {
   Briefcase, Users, Network, Play, Clock, Shield,
   ChevronRight, ArrowLeft, CheckCircle2, AlertCircle,
-  Database, FileText, Activity, History, Search, Filter,
+  Database, FileText, Activity, History, Search, Plus, Trash2, X, Info,
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { blueprintPipelines, maskedAssetSamples, connectorTableData, sampleColumns } from '../lib/constants';
+import { blueprintPipelines, maskedAssetSamples, connectorTableData, connectorSubsettingPolicy } from '../lib/constants';
 import { useConnectors } from '../context/ConnectorsContext';
 import { useWorkspaces } from '../context/WorkspacesContext';
 import { useAuth } from '../context/AuthContext';
@@ -776,132 +776,299 @@ function MaskingRulesTab() {
   );
 }
 
+const SAMPLING_STRATEGIES_WS = [
+  { value: "random",     label: "Random %",     desc: "Randomly sample N% of all rows" },
+  { value: "top_n",      label: "First N rows",  desc: "Take the first N rows in storage order" },
+  { value: "date_range", label: "Date range",    desc: "Filter rows between two dates" },
+  { value: "stratified", label: "Stratified",    desc: "Maintain distribution of a key column" },
+];
+
+const BLANK_TEMPLATE_CONFIG = {
+  strategy: 'random',
+  globalRowLimit: 1000,
+  samplePercent: 100,
+  respectReferentialIntegrity: false,
+  dateColumn: '', dateFrom: '', dateTo: '',
+  stratifyColumn: '',
+};
+
+function TemplateForm({ initial, onSave, onCancel }) {
+  const [form, setForm] = useState(initial);
+  const patch = (p) => setForm((prev) => ({ ...prev, ...p }));
+  const patchConfig = (p) => setForm((prev) => ({ ...prev, config: { ...prev.config, ...p } }));
+
+  return (
+    <div className="mb-4 space-y-4 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[11px] font-medium text-slate-600">Template name</label>
+          <input type="text" placeholder="e.g. Dev Preview" value={form.name}
+            onChange={(e) => patch({ name: e.target.value })}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-medium text-slate-600">Sampling strategy</label>
+          <select value={form.config.strategy}
+            onChange={(e) => patchConfig({ strategy: e.target.value })}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none">
+            {SAMPLING_STRATEGIES_WS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label} — {s.desc}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-[11px] font-medium text-slate-600">Max rows per table</label>
+          <input type="number" min="1" value={form.config.globalRowLimit}
+            onChange={(e) => patchConfig({ globalRowLimit: Number(e.target.value) || 1 })}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+        </div>
+
+        {form.config.strategy === 'random' && (
+          <div>
+            <label className="mb-1 block text-[11px] font-medium text-slate-600">Sample % — {form.config.samplePercent}%</label>
+            <input type="range" min="1" max="100" value={form.config.samplePercent}
+              onChange={(e) => patchConfig({ samplePercent: Number(e.target.value) })}
+              className="w-full accent-indigo-600 mt-2.5" />
+          </div>
+        )}
+
+        {form.config.strategy === 'date_range' && (
+          <>
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-slate-600">Date column</label>
+              <input type="text" placeholder="e.g. discharge_date" value={form.config.dateColumn}
+                onChange={(e) => patchConfig({ dateColumn: e.target.value })}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">From</label>
+                <input type="date" value={form.config.dateFrom} onChange={(e) => patchConfig({ dateFrom: e.target.value })}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+              </div>
+              <div className="flex-1">
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">To</label>
+                <input type="date" value={form.config.dateTo} onChange={(e) => patchConfig({ dateTo: e.target.value })}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+              </div>
+            </div>
+          </>
+        )}
+
+        {form.config.strategy === 'stratified' && (
+          <div>
+            <label className="mb-1 block text-[11px] font-medium text-slate-600">Group-by column</label>
+            <input type="text" placeholder="e.g. department" value={form.config.stratifyColumn}
+              onChange={(e) => patchConfig({ stratifyColumn: e.target.value })}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none" />
+          </div>
+        )}
+      </div>
+
+      <label className="flex items-start gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 cursor-pointer">
+        <input type="checkbox" checked={form.config.respectReferentialIntegrity}
+          onChange={(e) => patchConfig({ respectReferentialIntegrity: e.target.checked })}
+          className="mt-0.5 accent-indigo-600" />
+        <div>
+          <p className="text-[12px] font-medium text-slate-700">Respect referential integrity</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Include referenced rows from related tables automatically.</p>
+        </div>
+      </label>
+
+      <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-700">
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={form.restricted} onChange={(e) => patch({ restricted: e.target.checked })} className="accent-indigo-600" />
+          Restrict to admin (hidden from developer picker unless it's a pipeline's assigned default)
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={form.isWorkspaceDefault} onChange={(e) => patch({ isWorkspaceDefault: e.target.checked })} className="accent-indigo-600" />
+          Make this the workspace-wide default
+        </label>
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <button type="button" onClick={onCancel} className="rounded-lg px-3 py-1.5 text-[12px] text-slate-500 hover:text-slate-800">Cancel</button>
+        <Button className="rounded-lg text-[12px] px-3 py-1.5 h-auto" disabled={!form.name.trim()} onClick={() => onSave(form)}>Save template</Button>
+      </div>
+    </div>
+  );
+}
+
 function SubsettingTab({ workspace }) {
-  const storageKey = `tdm_subsetting_${workspace?.id || workspace?.name || 'workspace'}`;
-  const defaultConfig = {
-    enabled: false,
-    rowLimit: 1000,
-    samplePercent: 100,
-    includeColumns: [],
-  };
+  const templatesKey = `tdm_subsetting_templates_${workspace?.id || workspace?.name || 'workspace'}`;
+  const defaultsKey = `tdm_subsetting_pipeline_defaults_${workspace?.id || workspace?.name || 'workspace'}`;
 
-  const [config, setConfig] = useState(() => {
-    try {
-      const saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
-      return { ...defaultConfig, ...(saved || {}) };
-    } catch {
-      return defaultConfig;
-    }
+  const [templates, setTemplates] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(templatesKey) || '[]'); }
+    catch { return []; }
   });
-  const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    sessionStorage.setItem(storageKey, JSON.stringify(config));
-  }, [config, storageKey]);
+  // Map of pipelineId -> templateId. Set by the admin so a pipeline always
+  // has a safe subsetting config applied by default when a developer runs it.
+  const [pipelineDefaults, setPipelineDefaults] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(defaultsKey) || '{}'); }
+    catch { return {}; }
+  });
 
-  const toggleColumn = (name) => {
-    setConfig((prev) => ({
-      ...prev,
-      includeColumns: prev.includeColumns?.includes(name)
-        ? prev.includeColumns.filter((col) => col !== name)
-        : [...(prev.includeColumns || []), name],
-    }));
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null); // null while creating
+
+  useEffect(() => { sessionStorage.setItem(templatesKey, JSON.stringify(templates)); }, [templates, templatesKey]);
+  useEffect(() => { sessionStorage.setItem(defaultsKey, JSON.stringify(pipelineDefaults)); }, [pipelineDefaults, defaultsKey]);
+
+  const openCreateForm = () => { setEditingId(null); setFormOpen(true); };
+  const openEditForm = (tpl) => { setEditingId(tpl.id); setFormOpen(true); };
+  const closeForm = () => setFormOpen(false);
+
+  const saveForm = (form) => {
+    if (!form.name.trim()) return;
+    setTemplates((prev) => {
+      let next;
+      if (editingId) {
+        next = prev.map((t) => (t.id === editingId ? { ...t, name: form.name.trim(), restricted: form.restricted, isWorkspaceDefault: form.isWorkspaceDefault, config: form.config } : t));
+      } else {
+        next = [...prev, {
+          id: `tpl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: form.name.trim(),
+          restricted: form.restricted,
+          isWorkspaceDefault: form.isWorkspaceDefault,
+          config: form.config,
+        }];
+      }
+      // Only one workspace-wide default at a time.
+      if (form.isWorkspaceDefault) {
+        next = next.map((t) => (t.name === form.name.trim() || t.id === editingId ? t : { ...t, isWorkspaceDefault: false }));
+      }
+      return next;
+    });
+    setFormOpen(false);
   };
+
+  const deleteTemplate = (id) => {
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
+    setPipelineDefaults((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((pid) => { if (next[pid] === id) delete next[pid]; });
+      return next;
+    });
+  };
+
+  const setPipelineDefault = (pipelineId, templateId) => {
+    setPipelineDefaults((prev) => {
+      const next = { ...prev };
+      if (!templateId) delete next[pipelineId];
+      else next[pipelineId] = templateId;
+      return next;
+    });
+  };
+
+  // Pipelines that belong to this workspace — admin assigns a default template per pipeline here.
+  const workspacePipelines = blueprintPipelines.filter((p) => p.workspace_id === workspace?.id || p.workspace === workspace?.name);
+
+  // Admin caps: show for connectors in this workspace
+  const connectorIds = workspace?.connector_ids || [];
+  const policiesForWorkspace = connectorIds
+    .map((id) => connectorSubsettingPolicy[id])
+    .filter(Boolean);
+  const strictestCap = policiesForWorkspace.reduce((min, p) => (!min || p.maxRowsPerTable < min.maxRowsPerTable ? p : min), null);
+
+  const editingTemplate = editingId ? templates.find((t) => t.id === editingId) : null;
+  const formInitial = editingTemplate
+    ? { name: editingTemplate.name, restricted: editingTemplate.restricted, isWorkspaceDefault: !!editingTemplate.isWorkspaceDefault, config: { ...BLANK_TEMPLATE_CONFIG, ...editingTemplate.config } }
+    : { name: '', restricted: false, isWorkspaceDefault: templates.length === 0, config: { ...BLANK_TEMPLATE_CONFIG } };
 
   return (
     <div className="space-y-5">
       <Card className="rounded-2xl">
         <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center justify-between gap-3 mb-1">
             <div>
-              <h3 className="text-sm font-semibold text-slate-800">Workspace subsetting</h3>
-              <p className="mt-1 text-[13px] text-slate-500">Define row and column limits for this workspace before a pipeline run is started.</p>
+              <h3 className="text-sm font-semibold text-slate-800">Subsetting templates</h3>
+              <p className="mt-0.5 text-[12px] text-slate-500">
+                Every subsetting config in this workspace is a template. Mark one as the <span className="font-medium text-slate-700">workspace default</span> (auto-applied
+                everywhere), or assign a specific template to a single pipeline to override it.
+              </p>
             </div>
-            <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[12px] font-medium text-indigo-700">
-              <Filter size={13} />
-              {config.enabled ? 'Enabled' : 'Off'}
-            </div>
+            {!formOpen && (
+              <button
+                type="button"
+                onClick={openCreateForm}
+                className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-[12px] font-medium text-indigo-700 hover:bg-indigo-100 shrink-0"
+              >
+                <Plus size={13} /> New template
+              </button>
+            )}
           </div>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <label className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
-                <div>
-                  <p className="text-[13px] font-semibold text-slate-800">Apply subsetting to runs</p>
-                  <p className="mt-1 text-[12px] text-slate-500">Limit the amount of data used in this workspace’s masking jobs.</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={config.enabled}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, enabled: e.target.checked }))}
-                  className="mt-1 h-4 w-4 accent-indigo-600"
-                />
-              </label>
+          {strictestCap && (
+            <div className="my-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+              <Info size={13} className="shrink-0" />
+              Admin cap applies: <span className="font-semibold ml-1">{strictestCap.label}</span> limits runs to <span className="font-semibold ml-1">{strictestCap.maxRowsPerTable.toLocaleString()} rows/table</span>.
+              {strictestCap.mandatory && <span className="ml-2 rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold">Mandatory</span>}
+            </div>
+          )}
 
-              {config.enabled && (
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-[11px] font-medium text-slate-600">Max rows</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={config.rowLimit}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, rowLimit: Number(e.target.value) || 1 }))}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-[11px] font-medium text-slate-600">Sample %</label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="100"
-                      value={config.samplePercent}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, samplePercent: Number(e.target.value) }))}
-                      className="w-full accent-indigo-600"
-                    />
-                    <p className="mt-1 text-[12px] text-slate-500">{config.samplePercent}% of rows</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="mb-1 block text-[11px] font-medium text-slate-600">Included columns</label>
-                    <div className="flex flex-wrap gap-2">
-                      {sampleColumns.map((col) => {
-                        const active = config.includeColumns?.includes(col.name);
-                        return (
-                          <button
-                            key={col.name}
-                            type="button"
-                            onClick={() => toggleColumn(col.name)}
-                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${active ? 'border-indigo-200 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
-                          >
-                            {col.name}
-                          </button>
-                        );
-                      })}
+          {formOpen && (
+            <div className="mt-4">
+              <TemplateForm initial={formInitial} onSave={saveForm} onCancel={closeForm} />
+            </div>
+          )}
+
+          {templates.length === 0 && !formOpen && (
+            <p className="mt-4 text-[12px] text-slate-400 italic">No templates yet. Create one to define how pipelines in this workspace get subsetted.</p>
+          )}
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {templates.map((tpl) => {
+              const assignedTo = workspacePipelines.filter((p) => pipelineDefaults[p.id] === tpl.id);
+              return (
+                <div key={tpl.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[12px] font-semibold text-slate-700 flex flex-wrap items-center gap-1.5">
+                        {tpl.name}
+                        {tpl.isWorkspaceDefault && <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-medium text-indigo-700">Workspace default</span>}
+                        {tpl.restricted && <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[9px] font-medium text-slate-600">Admin-only</span>}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {SAMPLING_STRATEGIES_WS.find((s) => s.value === tpl.config.strategy)?.label || 'Random'} · {tpl.config.globalRowLimit?.toLocaleString()} rows
+                      </p>
                     </div>
-                    <p className="mt-2 text-[11px] text-slate-400">Leave this empty to keep the full schema in the run.</p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button type="button" onClick={() => openEditForm(tpl)}
+                        className="rounded-lg bg-indigo-50 border border-indigo-200 px-2 py-1 text-[10px] text-indigo-700 hover:bg-indigo-100">Edit</button>
+                      <button type="button" onClick={() => deleteTemplate(tpl.id)}
+                        className="text-slate-400 hover:text-red-500 p-1"><Trash2 size={12} /></button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h4 className="text-[13px] font-semibold text-slate-800">How it will apply</h4>
-              <ul className="mt-3 space-y-2 text-[12px] text-slate-600">
-                <li>• Limit preview rows to {config.rowLimit} before execution.</li>
-                <li>• Sample {config.samplePercent}% of rows for the current workspace run.</li>
-                <li>• Restrict the pipeline to {config.includeColumns?.length ? config.includeColumns.join(', ') : 'all available columns'}.</li>
-              </ul>
-              <Button
-                className="mt-5 rounded-xl"
-                onClick={() => {
-                  setSaved(true);
-                  window.setTimeout(() => setSaved(false), 1400);
-                }}
-              >
-                {saved ? 'Saved' : 'Save preset'}
-              </Button>
-            </div>
+                  {workspacePipelines.length > 0 && (
+                    <select
+                      value=""
+                      onChange={(e) => e.target.value && setPipelineDefault(e.target.value, tpl.id)}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] outline-none text-slate-500"
+                    >
+                      <option value="">Set as default for pipeline…</option>
+                      {workspacePipelines.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  {assignedTo.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {assignedTo.map((p) => (
+                        <span key={p.id} className="flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] text-emerald-700">
+                          Default for {p.name}
+                          <button type="button" onClick={() => setPipelineDefault(p.id, null)} className="hover:text-red-500"><X size={9} /></button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -994,7 +1161,7 @@ export default function WorkspaceDetailPage() {
       {(activeTab.tab === 'data-assets' || activeTab.tab === 'data-classification') && <DataClassificationPage />}
       {activeTab.tab === 'masking-rules' && <MaskingRulesTab />}
       {activeTab.tab === 'subsetting' && <SubsettingTab workspace={workspace} />}
-      {activeTab.tab === 'pipelines' && <ExistingPipelinesPage />}
+      {activeTab.tab === 'pipelines' && <ExistingPipelinesPage workspace={workspace} />}
       {activeTab.tab === 'masked-assets' && <MaskedAssetsPage />}
       {activeTab.tab === 'jobs' && <JobsTab workspace={workspace} />}
       {activeTab.tab === 'job-history' && <JobHistoryPage />}

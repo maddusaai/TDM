@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   Database, Settings, Play, CheckCircle2, Clock, History,
   AlertTriangle, Eye, FileText, Activity, Lock, List,
   ChevronRight, Shield, ChevronDown, Tags, SlidersHorizontal, TableProperties, Plus,
-  Copy, Pencil, RefreshCw, ArrowLeft, Table2, CalendarClock, Layers, X,
+  Copy, Pencil, RefreshCw, ArrowLeft, Table2, CalendarClock, Layers, X, Filter, Info,
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -16,7 +16,7 @@ import { useConnectors } from '../context/ConnectorsContext';
 import { useJobs } from '../context/JobsContext';
 import {
   API_BASE_URL, sampleColumns, connectorTableData, TEST_CONNECTOR_STRINGS,
-  blueprintPipelines, blueprintWorkspaces, blueprintConnections,
+  blueprintPipelines, blueprintWorkspaces, blueprintConnections, connectorSubsettingPolicy,
 } from '../lib/constants';
 
 // ─── Wizard sub-components ───────────────────────────────────────────────────
@@ -560,7 +560,7 @@ function PreRunValidationAgentCard({ validation, loading, error, onValidate }) {
   );
 }
 
-function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedDatasets, pipelineName, pipelineId, workspaceId, isPipelineRun = false, subsettingConfig, onSubsettingChange }) {
+function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedDatasets, pipelineName, pipelineId, workspaceId, isPipelineRun = false, subsettingConfig, onSubsettingChange, pipelineRef }) {
   const { addJob } = useJobs();
   const [running, setRunning] = useState(false);
   const [complete, setComplete] = useState(false);
@@ -728,7 +728,7 @@ function RunStep({ currentUser, onNext, onJobCreated, maskingRules, selectedData
       ) : (
         <PreRunValidationAgentCard validation={validationResult} loading={validationLoading} error={validationError} onValidate={validatePreRun} />
       )}
-      <SubsettingPanel value={subsettingConfig} onChange={onSubsettingChange} />
+      <SubsettingPanel value={subsettingConfig} onChange={onSubsettingChange} pipeline={pipelineRef} />
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="rounded-2xl shadow-sm lg:col-span-2">
           <CardContent className="p-6">
@@ -936,17 +936,19 @@ function ReviewStep({ jobId, selectedDatasets = [] }) {
 
 // ─── Pipeline wizard state ────────────────────────────────────────────────────
 
-function PipelineWizard({ currentUser, onDone }) {
+function PipelineWizard({ currentUser, onDone, workspace }) {
   const [pipelineName, setPipelineName] = useState('');
-  const [workspaceName, setWorkspaceName] = useState('');
-  const [workspaceId, setWorkspaceId] = useState('');
+  const [workspaceName, setWorkspaceName] = useState(workspace?.name || '');
+  const [workspaceId, setWorkspaceId] = useState(workspace?.id || '');
   const [activeStep, setActiveStep] = useState(1);
   const [currentJobId, setCurrentJobId] = useState(null);
   const [maskingRules, setMaskingRules] = useState({});
   const [selectedDatasets, setSelectedDatasets] = useState([]);
   const [subsettingConfig, setSubsettingConfig] = useState({ enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] });
+  // Generated once so the "set as default" template action can save against a stable id even before the pipeline exists in the catalog.
+  const [pipelineId] = useState(() => `pipe-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
 
-  const reset = () => { setActiveStep(1); setCurrentJobId(null); setMaskingRules({}); setSelectedDatasets([]); setSubsettingConfig({ enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] }); setPipelineName(''); setWorkspaceName(''); };
+  const reset = () => { setActiveStep(1); setCurrentJobId(null); setMaskingRules({}); setSelectedDatasets([]); setSubsettingConfig({ enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] }); setPipelineName(''); if (!workspace) { setWorkspaceName(''); setWorkspaceId(''); } };
 
   return (
     <div className="space-y-6">
@@ -972,20 +974,26 @@ function PipelineWizard({ currentUser, onDone }) {
             </div>
             <div>
               <label className="mb-1 block text-[12px] font-semibold text-slate-700">Workspace <span className="text-rose-400">*</span></label>
-              <select
-                value={workspaceName}
-                onChange={(e) => {
-                  const ws = blueprintWorkspaces.find((w) => w.name === e.target.value);
-                  setWorkspaceName(e.target.value);
-                  setWorkspaceId(ws?.id || '');
-                }}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] outline-none focus:border-indigo-400"
-              >
-                <option value="">Select workspace…</option>
-                {blueprintWorkspaces.map((ws) => (
-                  <option key={ws.id} value={ws.name}>{ws.name}</option>
-                ))}
-              </select>
+              {workspace ? (
+                <div className="flex items-center h-[42px] rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] text-slate-600">
+                  {workspace.name}
+                </div>
+              ) : (
+                <select
+                  value={workspaceName}
+                  onChange={(e) => {
+                    const ws = blueprintWorkspaces.find((w) => w.name === e.target.value);
+                    setWorkspaceName(e.target.value);
+                    setWorkspaceId(ws?.id || '');
+                  }}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] outline-none focus:border-indigo-400"
+                >
+                  <option value="">Select workspace…</option>
+                  {blueprintWorkspaces.map((ws) => (
+                    <option key={ws.id} value={ws.name}>{ws.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
         </CardContent>
@@ -1031,6 +1039,7 @@ function PipelineWizard({ currentUser, onDone }) {
               isPipelineRun={true}
               subsettingConfig={subsettingConfig}
               onSubsettingChange={setSubsettingConfig}
+              pipelineRef={{ id: pipelineId, source_connector_id: selectedDatasets[0]?.source_connector_id, tables: selectedDatasets.map((d) => d.table_name).filter(Boolean), workspace_id: workspaceId }}
               onJobCreated={(jobId) => setCurrentJobId(jobId)}
               onNext={() => setActiveStep(4)}
             />
@@ -1046,8 +1055,10 @@ function PipelineWizard({ currentUser, onDone }) {
               <Button
                 onClick={() =>
                   onDone({
+                    id: pipelineId,
                     name: pipelineName || `Pipeline_${Date.now()}`,
                     workspace: workspaceName || '—',
+                    workspace_id: workspaceId || null,
                     sandbox: '—',
                     source: selectedDatasets[0]?.source_database || selectedDatasets[0]?.source_type || 'DB',
                     source_connector_id: selectedDatasets[0]?.source_connector_id || null,
@@ -1076,29 +1087,268 @@ const SIMULATED_DRIFT = {
   removed: ['contact_number'],
 };
 
-function SubsettingPanel({ value, onChange }) {
-  const config = value || { enabled: false, rowLimit: 1000, samplePercent: 100, includeColumns: [] };
+const SAMPLING_STRATEGIES = [
+  { value: 'random',     label: 'Random %',       desc: 'Randomly sample N% of all rows' },
+  { value: 'top_n',      label: 'First N rows',    desc: 'Take the first N rows in storage order' },
+  { value: 'date_range', label: 'Date range',      desc: 'Filter rows between two dates' },
+  { value: 'stratified', label: 'Stratified',      desc: 'Maintain distribution of a key column' },
+];
 
-  const toggleColumn = (name) => {
-    onChange({
-      ...config,
-      includeColumns: config.includeColumns?.includes(name)
-        ? config.includeColumns.filter((col) => col !== name)
-        : [...(config.includeColumns || []), name],
+const FILTER_OPS = ['=', '!=', '>', '>=', '<', '<=', 'IN', 'BETWEEN'];
+
+function TableSubsettingRow({ tableName, tableConfig, onUpdate, adminCap }) {
+  const tc = tableConfig || { rowLimit: 1000, strategy: 'random', samplePercent: 100, filters: [], dateColumn: '', dateFrom: '', dateTo: '', stratifyColumn: '' };
+
+  const update = (patch) => onUpdate(tableName, { ...tc, ...patch });
+
+  const addFilter = () => update({ filters: [...(tc.filters || []), { column: '', op: '=', value: '' }] });
+  const removeFilter = (i) => update({ filters: tc.filters.filter((_, idx) => idx !== i) });
+  const patchFilter = (i, patch) => update({ filters: tc.filters.map((f, idx) => idx === i ? { ...f, ...patch } : f) });
+
+  const capExceeded = adminCap && tc.rowLimit > adminCap.maxRowsPerTable;
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[12px] font-semibold text-slate-700 font-mono">{tableName}</span>
+        {capExceeded && (
+          <span className="flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700">
+            <Info size={10} /> exceeds admin cap ({adminCap.maxRowsPerTable.toLocaleString()} rows)
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="mb-1 block text-[10px] font-medium text-slate-500">Sampling strategy</label>
+          <select
+            value={tc.strategy || 'random'}
+            onChange={(e) => update({ strategy: e.target.value })}
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[12px] outline-none"
+          >
+            {SAMPLING_STRATEGIES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {(tc.strategy === 'random' || tc.strategy === 'stratified' || !tc.strategy) && (
+          <div>
+            <label className="mb-1 block text-[10px] font-medium text-slate-500">Max rows</label>
+            <input
+              type="number"
+              min="1"
+              value={tc.rowLimit}
+              onChange={(e) => update({ rowLimit: Number(e.target.value) || 1 })}
+              className={`w-full rounded-lg border px-2 py-1.5 text-[12px] outline-none ${capExceeded ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}
+            />
+          </div>
+        )}
+
+        {tc.strategy === 'random' && (
+          <div className="col-span-2">
+            <label className="mb-1 block text-[10px] font-medium text-slate-500">Sample % — {tc.samplePercent}%</label>
+            <input
+              type="range" min="1" max="100"
+              value={tc.samplePercent}
+              onChange={(e) => update({ samplePercent: Number(e.target.value) })}
+              className="w-full accent-indigo-600"
+            />
+          </div>
+        )}
+
+        {tc.strategy === 'top_n' && (
+          <div>
+            <label className="mb-1 block text-[10px] font-medium text-slate-500">Row count</label>
+            <input
+              type="number" min="1"
+              value={tc.rowLimit}
+              onChange={(e) => update({ rowLimit: Number(e.target.value) || 1 })}
+              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] outline-none"
+            />
+          </div>
+        )}
+
+        {tc.strategy === 'date_range' && (
+          <>
+            <div>
+              <label className="mb-1 block text-[10px] font-medium text-slate-500">Date column</label>
+              <input
+                type="text" placeholder="e.g. discharge_date"
+                value={tc.dateColumn || ''}
+                onChange={(e) => update({ dateColumn: e.target.value })}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-medium text-slate-500">From</label>
+              <input type="date" value={tc.dateFrom || ''} onChange={(e) => update({ dateFrom: e.target.value })}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] outline-none" />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-medium text-slate-500">To</label>
+              <input type="date" value={tc.dateTo || ''} onChange={(e) => update({ dateTo: e.target.value })}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] outline-none" />
+            </div>
+          </>
+        )}
+
+        {tc.strategy === 'stratified' && (
+          <div>
+            <label className="mb-1 block text-[10px] font-medium text-slate-500">Group-by column</label>
+            <input
+              type="text" placeholder="e.g. department"
+              value={tc.stratifyColumn || ''}
+              onChange={(e) => update({ stratifyColumn: e.target.value })}
+              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] outline-none"
+            />
+          </div>
+        )}
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] font-medium text-slate-500">WHERE filters</span>
+          <button type="button" onClick={addFilter}
+            className="flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] text-indigo-700 hover:bg-indigo-100">
+            + Add
+          </button>
+        </div>
+        {(tc.filters || []).length === 0 && (
+          <p className="text-[11px] text-slate-400 italic">No filters — all rows included</p>
+        )}
+        {(tc.filters || []).map((f, i) => (
+          <div key={i} className="mt-1.5 flex items-center gap-1.5">
+            <input type="text" placeholder="column" value={f.column}
+              onChange={(e) => patchFilter(i, { column: e.target.value })}
+              className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] outline-none" />
+            <select value={f.op} onChange={(e) => patchFilter(i, { op: e.target.value })}
+              className="rounded-lg border border-slate-200 bg-slate-50 px-1 py-1 text-[11px] outline-none">
+              {FILTER_OPS.map((op) => <option key={op}>{op}</option>)}
+            </select>
+            <input type="text" placeholder="value" value={f.value}
+              onChange={(e) => patchFilter(i, { value: e.target.value })}
+              className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] outline-none" />
+            <button type="button" onClick={() => removeFilter(i)}
+              className="text-slate-400 hover:text-red-500"><X size={12} /></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Converts a workspace template's single strategy config into a per-table
+// tableLimits map — every table in the pipeline starts from the same values,
+// developers can still edit individual tables afterward.
+function applyTemplateToTables(template, tables) {
+  const perTable = {
+    strategy: template.config.strategy || 'random',
+    rowLimit: template.config.globalRowLimit || 1000,
+    samplePercent: template.config.samplePercent || 100,
+    filters: [],
+    dateColumn: template.config.dateColumn || '',
+    dateFrom: template.config.dateFrom || '',
+    dateTo: template.config.dateTo || '',
+    stratifyColumn: template.config.stratifyColumn || '',
+  };
+  const tableLimits = {};
+  tables.forEach((t) => { tableLimits[t] = { ...perTable }; });
+  return {
+    enabled: true,
+    respectReferentialIntegrity: template.config.respectReferentialIntegrity || false,
+    globalRowLimit: template.config.globalRowLimit || 1000,
+    tableLimits,
+    appliedTemplateId: template.id,
+  };
+}
+
+function SubsettingPanel({ value, onChange, pipeline }) {
+  const tables = pipeline?.tables || [];
+  const connectorId = pipeline?.source_connector_id || null;
+  const adminCap = connectorId ? connectorSubsettingPolicy[connectorId] : null;
+  const workspaceId = pipeline?.workspace_id;
+
+  const isMandatory = adminCap?.mandatory;
+
+  const defaultConfig = {
+    enabled: isMandatory || false,
+    respectReferentialIntegrity: false,
+    globalRowLimit: 1000,
+    tableLimits: {},
+  };
+  const config = {
+    ...defaultConfig,
+    ...(value || {}),
+    ...(isMandatory ? { enabled: true } : {}),
+  };
+
+  // Templates + the admin-assigned default for this pipeline, both saved from the Workspace's Subsetting tab.
+  const { isAdmin } = useAuth();
+  const [templates] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(`tdm_subsetting_templates_${workspaceId}`) || '[]'); }
+    catch { return []; }
+  });
+  const [pipelineDefaults, setPipelineDefaultsState] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(`tdm_subsetting_pipeline_defaults_${workspaceId}`) || '{}'); }
+    catch { return {}; }
+  });
+  // Pipeline-specific default wins; otherwise fall back to the workspace-wide default template.
+  const pipelineDefaultTemplateId = pipeline?.id ? pipelineDefaults[pipeline.id] : null;
+  const workspaceDefaultTemplate = templates.find((t) => t.isWorkspaceDefault) || null;
+  const defaultTemplateId = pipelineDefaultTemplateId || workspaceDefaultTemplate?.id || null;
+  const defaultTemplate = templates.find((t) => t.id === defaultTemplateId) || null;
+  // Developers only see open templates, plus the one assigned/defaulted for this pipeline (even if admin-only).
+  const pickableTemplates = templates.filter((t) => !t.restricted || t.id === defaultTemplateId);
+
+  const setThisPipelineDefault = (templateId) => {
+    if (!pipeline?.id || !workspaceId) return;
+    setPipelineDefaultsState((prev) => {
+      const next = { ...prev };
+      if (!templateId) delete next[pipeline.id];
+      else next[pipeline.id] = templateId;
+      sessionStorage.setItem(`tdm_subsetting_pipeline_defaults_${workspaceId}`, JSON.stringify(next));
+      return next;
     });
   };
 
+  // Seed the config from the pipeline's default template exactly once, so the
+  // panel opens pre-configured instead of blank — developers can still override per table below.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current) return;
+    seededRef.current = true;
+    if (defaultTemplate && (!value || (!value.tableLimits && !value.appliedTemplateId))) {
+      onChange(applyTemplateToTables(defaultTemplate, tables));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateTable = (tableName, tableConfig) => {
+    onChange({ ...config, tableLimits: { ...config.tableLimits, [tableName]: tableConfig }, appliedTemplateId: null });
+  };
+
+  const handleTemplatePick = (templateId) => {
+    if (!templateId) return;
+    const tpl = templates.find((t) => t.id === templateId);
+    if (tpl) onChange(applyTemplateToTables(tpl, tables));
+  };
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[13px] font-semibold text-slate-800">Subsetting</p>
-          <p className="mt-1 text-[12px] text-slate-500">Limit rows and columns for this rerun.</p>
+          <p className="text-[13px] font-semibold text-slate-800 flex items-center gap-1.5">
+            <Filter size={13} className="text-indigo-500" /> Subsetting
+          </p>
+          <p className="mt-0.5 text-[11px] text-slate-500">Limit rows per table for this run.</p>
         </div>
-        <label className="flex items-center gap-2 text-[12px] text-slate-600">
+        <label className={`flex items-center gap-2 text-[12px] ${isMandatory ? 'text-amber-700' : 'text-slate-600'}`}>
+          {isMandatory && <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-medium">Required by admin</span>}
           <input
             type="checkbox"
             checked={config.enabled}
+            disabled={isMandatory}
             onChange={(e) => onChange({ ...config, enabled: e.target.checked })}
             className="accent-indigo-600"
           />
@@ -1106,49 +1356,80 @@ function SubsettingPanel({ value, onChange }) {
         </label>
       </div>
 
-      {config.enabled && (
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-[11px] font-medium text-slate-600">Max rows</label>
-            <input
-              type="number"
-              min="1"
-              value={config.rowLimit}
-              onChange={(e) => onChange({ ...config, rowLimit: Number(e.target.value) || 1 })}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[11px] font-medium text-slate-600">Sample %</label>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              value={config.samplePercent}
-              onChange={(e) => onChange({ ...config, samplePercent: Number(e.target.value) })}
-              className="w-full accent-indigo-600"
-            />
-            <p className="mt-1 text-[12px] text-slate-500">{config.samplePercent}% of rows</p>
-          </div>
-          <div className="md:col-span-2">
-            <label className="mb-1 block text-[11px] font-medium text-slate-600">Included columns</label>
-            <div className="flex flex-wrap gap-2">
-              {sampleColumns.map((col) => {
-                const active = config.includeColumns?.includes(col.name);
-                return (
-                  <button
-                    key={col.name}
-                    type="button"
-                    onClick={() => toggleColumn(col.name)}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${active ? 'border-indigo-200 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
-                  >
-                    {col.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {adminCap && (
+        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-500">
+          <Info size={11} className="shrink-0 text-slate-400" />
+          Admin cap for <span className="font-medium text-slate-700 mx-1">{adminCap.label}</span>:
+          max <span className="font-medium text-slate-700 mx-1">{adminCap.maxRowsPerTable.toLocaleString()}</span> rows per table
         </div>
+      )}
+
+      {config.enabled && (pickableTemplates.length > 0 || defaultTemplate) && (
+        <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-medium text-indigo-700 shrink-0">Template</span>
+            <select
+              value={config.appliedTemplateId || ''}
+              onChange={(e) => handleTemplatePick(e.target.value)}
+              className="flex-1 rounded-lg border border-indigo-200 bg-white px-2 py-1 text-[11px] outline-none"
+            >
+              <option value="">Custom (manually configured)</option>
+              {pickableTemplates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}{t.id === defaultTemplateId ? ' (pipeline default)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {isAdmin && config.appliedTemplateId && pipeline?.id && (
+            <label className="flex items-center gap-2 text-[10px] text-indigo-800">
+              <input
+                type="checkbox"
+                checked={pipelineDefaultTemplateId === config.appliedTemplateId}
+                onChange={(e) => setThisPipelineDefault(e.target.checked ? config.appliedTemplateId : null)}
+                className="accent-indigo-600"
+              />
+              Make "{templates.find((t) => t.id === config.appliedTemplateId)?.name}" the default for this pipeline
+            </label>
+          )}
+        </div>
+      )}
+
+      {config.enabled && tables.length > 0 && (
+        <div className="space-y-2">
+          {tables.map((t) => (
+            <TableSubsettingRow
+              key={t}
+              tableName={t}
+              tableConfig={config.tableLimits?.[t]}
+              onUpdate={updateTable}
+              adminCap={adminCap}
+            />
+          ))}
+        </div>
+      )}
+
+      {config.enabled && tables.length === 0 && (
+        <p className="text-[12px] text-slate-400 italic">No tables selected — configure tables in the pipeline first.</p>
+      )}
+
+      {config.enabled && (
+        <label className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={config.respectReferentialIntegrity}
+            onChange={(e) => onChange({ ...config, respectReferentialIntegrity: e.target.checked })}
+            className="mt-0.5 accent-indigo-600"
+          />
+          <div>
+            <p className="text-[12px] font-medium text-slate-700">Respect referential integrity</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Automatically include referenced rows from related tables to avoid FK violations.
+              {config.respectReferentialIntegrity && <span className="ml-1 text-amber-600 font-medium">Row counts may exceed your per-table limit.</span>}
+            </p>
+          </div>
+        </label>
       )}
     </div>
   );
@@ -1196,7 +1477,7 @@ function RunJobModal({ pipeline, onClose, onConfirmRun }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm px-4">
-      <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden">
+      <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
@@ -1214,7 +1495,7 @@ function RunJobModal({ pipeline, onClose, onConfirmRun }) {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
           {/* Job summary */}
           <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-2.5 text-[13px]">
             {[
@@ -1230,7 +1511,7 @@ function RunJobModal({ pipeline, onClose, onConfirmRun }) {
             ))}
           </div>
 
-          {step === 'initial' && <SubsettingPanel value={subsettingConfig} onChange={setSubsettingConfig} />}
+          {step === 'initial' && <SubsettingPanel value={subsettingConfig} onChange={setSubsettingConfig} pipeline={pipeline} />}
 
           {/* Schema drift checkbox — only on initial */}
           {step === 'initial' && (
@@ -1619,12 +1900,18 @@ function loadPipelinesFromSession() {
   }
 }
 
-export default function PipelinesPage() {
+export default function PipelinesPage({ workspace } = {}) {
   const { currentUser } = useAuth();
   const { addJob } = useJobs();
   const [creating, setCreating] = useState(false);
   const [pipelines, setPipelines] = useState(loadPipelinesFromSession);
   const [viewingPipeline, setViewingPipeline] = useState(null);
+
+  // When embedded inside a workspace tab, only that workspace's pipelines are shown
+  // and new pipelines are created directly inside it (no workspace picker).
+  const visiblePipelines = workspace
+    ? pipelines.filter((p) => p.workspace_id === workspace.id || p.workspace === workspace.name)
+    : pipelines;
 
   useEffect(() => {
     sessionStorage.setItem(PIPELINES_SESSION_KEY, JSON.stringify(pipelines));
@@ -1700,7 +1987,7 @@ export default function PipelinesPage() {
   };
 
   if (creating) {
-    return <PipelineWizard currentUser={currentUser} onDone={handleWizardDone} />;
+    return <PipelineWizard currentUser={currentUser} onDone={handleWizardDone} workspace={workspace} />;
   }
 
   if (viewingPipeline) {
@@ -1736,14 +2023,14 @@ export default function PipelinesPage() {
               <h2 className="text-base font-semibold text-slate-900">Pipeline Catalog</h2>
               <p className="text-[13px] text-slate-500">Click a pipeline to view its details.</p>
             </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-600">{pipelines.length} pipeline{pipelines.length !== 1 ? 's' : ''}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-600">{visiblePipelines.length} pipeline{visiblePipelines.length !== 1 ? 's' : ''}</span>
           </div>
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full min-w-[960px] text-left text-[13px]">
               <thead className="bg-slate-50 text-[11px] uppercase text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Pipeline</th>
-                  <th className="px-4 py-3">Workspace</th>
+                  {!workspace && <th className="px-4 py-3">Workspace</th>}
                   <th className="px-4 py-3">Sandbox</th>
                   <th className="px-4 py-3">Source</th>
                   <th className="px-4 py-3">Target</th>
@@ -1753,14 +2040,14 @@ export default function PipelinesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {pipelines.map((p) => (
+                {visiblePipelines.map((p) => (
                   <tr
                     key={p.name}
                     onClick={() => setViewingPipeline(p)}
                     className="cursor-pointer hover:bg-slate-50 transition-colors"
                   >
                     <td className="px-4 py-3 font-semibold text-indigo-700 hover:underline">{p.name}</td>
-                    <td className="px-4 py-3 text-slate-600">{p.workspace}</td>
+                    {!workspace && <td className="px-4 py-3 text-slate-600">{p.workspace}</td>}
                     <td className="px-4 py-3 text-slate-500 text-[12px]">{p.sandbox || '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{p.source}</td>
                     <td className="px-4 py-3 text-slate-600">{p.target}</td>

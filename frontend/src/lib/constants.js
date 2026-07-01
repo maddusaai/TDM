@@ -415,6 +415,16 @@ export const blueprintPipelines = [
   },
 ];
 
+// Admin-defined subsetting caps per connector.
+// mandatory: developer cannot disable subsetting for this connector.
+// maxRowsPerTable: hard ceiling — developer limit cannot exceed this.
+export const connectorSubsettingPolicy = {
+  'conn-001': { mandatory: false, maxRowsPerTable: 10000, label: 'SQL_PROD_HEALTHCARE' },
+  'conn-002': { mandatory: false, maxRowsPerTable: 50000, label: 'DBX_TDM_MASKED' },
+  'conn-003': { mandatory: false, maxRowsPerTable: 50000, label: 'SQL_QA_MASKED' },
+  'conn-004': { mandatory: false, maxRowsPerTable: 20000, label: 'SFTP_MEMBER_FEED' },
+};
+
 export const maskedAssetSamples = [
   {
     asset: 'Patient Records Masked Asset',
